@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discogs Collection</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-top">
+                <nav class="nav-tabs">
+                    <button id="collectionTab" class="nav-tab active" data-path="/collection">Collection</button>
+                    <button id="wantlistTab" class="nav-tab" data-path="/wantlist">Wantlist</button>
+                </nav>
+            </div>
+            <p class="subtitle" id="userInfo"></p>
+        </header>
+
+        <div class="controls">
+            <button id="refreshBtn" class="btn-refresh">Refresh</button>
+            <div class="filters">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    class="search-box" 
+                    placeholder="Search wantlist..."
+                >
+                <div class="custom-select">
+                    <button class="sort-select" id="sortBtn">
+                        <span id="sortLabel">Newest First</span>
+                        <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="sort-dropdown hidden" id="sortDropdown">
+                        <option data-value="date-desc">Newest First</option>
+                        <option data-value="date-asc">Oldest First</option>
+                        <option data-value="title-asc">Title (A-Z)</option>
+                        <option data-value="title-desc">Title (Z-A)</option>
+                        <option data-value="artist-asc">Artist (A-Z)</option>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingSpinner" class="loading hidden">
+            <div class="spinner"></div>
+            <p>Loading wantlist...</p>
+        </div>
+
+        <div id="errorMessage" class="error hidden"></div>
+
+        <div id="shopsContainer" class="shops-section hidden">
+            <h2>Vinyl Shops</h2>
+            <div id="shopsList" class="shops-list"></div>
+        </div>
+
+        <div id="wantlistContainer" class="wantlist-grid">
+            <!-- Wantlist items will be inserted here -->
+        </div>
+
+        <footer>
+            <p>Data from <a href="https://www.discogs.com" target="_blank">Discogs</a></p>
+        </footer>
+    </div>
+
+    <script src="config.local.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
