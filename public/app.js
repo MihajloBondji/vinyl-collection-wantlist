@@ -360,6 +360,8 @@ async function fetchImageAsBase64(imageUrl) {
 function renderWantlist() {
     wantlistContainer.innerHTML = '';
 
+    currentPath === '/wantlist' ? wantlistContainer.classList.add('wantlist-view') : wantlistContainer.classList.remove('wantlist-view');
+
     if (filteredItems.length === 0) {
         wantlistContainer.innerHTML = '<div class="empty-state"><p>No items found</p></div>';
         return;
