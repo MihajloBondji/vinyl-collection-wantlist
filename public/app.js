@@ -337,7 +337,8 @@ async function fetchItems(apiUrl) {
                         uri: item.uri || '',
                         resourceUrl: item.resource_url,
                         dateAdded: item.date_added || new Date().toISOString(),
-                        format: basicInfo.formats?.[0]?.name || 'Unknown'
+                        format: basicInfo.formats?.[0]?.name || 'Unknown',
+                        notes: (Array.isArray(item.notes) && item.notes.find(n => n.field_id === 3)?.value) || ''
                     });
                 });
             }
@@ -367,7 +368,7 @@ function renderWantlist() {
     filteredItems.forEach(item => {
         const itemElement = createItemElement(item);
         itemElement.onclick = () => {
-            itemElement.classList.toggle('item-selected');
+            itemElement.classList.add('item-selected');
             overlay.classList.remove('hidden');
             itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
@@ -396,8 +397,8 @@ function createItemElement(item) {
         ${imageHtml}
         <div class="item-details">
             <h3 class="item-title">${escapeHtml(item.title)}</h3>
-            <p class="item-artist">${escapeHtml(item.artist)}</p>
-            <p class="item-meta">${item.format} • ${item.year}</p>
+            <p class="item-artist">${escapeHtml(item.artist)}${item.year>0 ? ' • ' + item.year : ''}</p>
+            <p class="item-notes">${escapeHtml(item.notes)}</p>
             <a href="${discogsUrl}" target="_blank" class="item-link">View on Discogs →</a>
         </div>
     `;

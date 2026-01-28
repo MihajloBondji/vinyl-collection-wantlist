@@ -1,6 +1,7 @@
 /* Root variables for easy theming */
 :root {
     --primary-color: #DFCAA0;
+    --primary-color-hover: #dfcaa077;
     --dark-bg: #191414;
     --light-bg: #282828;
     --text-primary: #ffffff;
@@ -220,7 +221,7 @@ header h1 {
 }
 
 .btn-refresh:hover {
-    background-color: #1ed760;
+    background-color: var(--primary-color);
     transform: scale(1.05);
 }
 
@@ -316,28 +317,29 @@ header h1 {
 }
 
 /* Wantlist Grid */
-.wantlist-grid {
+.list-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 2rem;
     margin-bottom: 3rem;
+}
+ .wantlist-item {
+    overflow: hidden;
+    transition: var(--transition);
 }
 
 .wantlist-item {
     background-color: var(--light-bg);
     border: 1px solid var(--border-color);
     border-radius: 8px;
-    overflow: hidden;
-    transition: var(--transition);
     display: flex;
     flex-direction: column;
-    height: 100%;
 }
 
 .wantlist-item:not(.item-selected):hover {
     border-color: var(--primary-color);
     transform: translateY(-4px);
-    box-shadow: 0 8px 16px rgba(29, 185, 84, 0.2);
+    box-shadow: 0 8px 16px var(--primary-color-hover);
 }
 
 .item-image {
@@ -359,14 +361,14 @@ header h1 {
     transform: scale(1.05);
 }
 
-.item-details {
+.item-details{
     padding: 1rem;
     display: flex;
     flex-direction: column;
     flex: 1;
 }
 
-.item-title {
+.item-title{
     font-size: 1rem;
     font-weight: 600;
     margin-bottom: 0.5rem;
@@ -387,23 +389,24 @@ header h1 {
     overflow: hidden;
 }
 
-.item-meta {
+.item-notes{
+    font-size: 0.8rem;
+    font-style: italic;
     color: var(--text-secondary);
-    font-size: 0.85rem;
-    margin-bottom: 1rem;
-    margin-top: auto;
 }
 
 .item-link {
+    display: block;
     color: var(--primary-color);
     text-decoration: none;
     font-weight: 500;
     font-size: 0.9rem;
     transition: var(--transition);
+    margin-top: auto;
 }
 
 .item-link:hover {
-    color: #1ed760;
+    color: var(--primary-color);
 }
 
 /* Empty state */
@@ -430,7 +433,7 @@ footer a {
 }
 
 footer a:hover {
-    color: #1ed760;
+    color: var(--primary-color);
 }
 
 .overlay{
@@ -450,19 +453,20 @@ footer a:hover {
 .item-selected{
     position: absolute;
     width: 500px;
+    max-width: 90%;
     height: auto;
     left: 50%;
     transform: translateX(-50%);
     z-index: 100;
 }
 
-.item-selected .item-image img {
+.list-grid:not(.wantlist-view) .item-selected .item-image img {
     border-radius: 50%;
     animation: spinning 10s linear infinite;
 }
 
 
-.item-selected .item-image::after{
+.list-grid:not(.wantlist-view) .item-selected .item-image::after{
     content: "";
     display: block;
     position: absolute;
@@ -504,7 +508,7 @@ footer a:hover {
         width: 100%;
     }
 
-    .wantlist-grid {
+    .list-grid {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 1rem;
     }
@@ -519,7 +523,7 @@ footer a:hover {
         gap: 1rem;
     }
 
-    .wantlist-grid {
+    .list-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 0.75rem;
     }
