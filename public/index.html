@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Discogs Collection</title>
+    <link rel="icon" type="image/x-icon" href="favicon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16x16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32x32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/apple-touch-icon.png">
+    <link rel="manifest" href="favicon/site.webmanifest">
+    <link rel="icon" type="image/png" sizes="192x192" href="favicon/android-chrome-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="favicon/android-chrome-512x512.png">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -25,7 +32,7 @@
                     type="text" 
                     id="searchInput" 
                     class="search-box" 
-                    placeholder="Search wantlist..."
+                    placeholder="Search"
                 >
                 <div class="custom-select">
                     <button class="sort-select" id="sortBtn">
@@ -65,6 +72,7 @@
             <p>Data from <a href="https://www.discogs.com" target="_blank">Discogs</a></p>
         </footer>
     </div>
+    <div class="overlay hidden" id="overlay"></div>
 
     <script src="config.local.js"></script>
     <script src="app.js"></script>

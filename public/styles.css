@@ -334,13 +334,14 @@ header h1 {
     height: 100%;
 }
 
-.wantlist-item:hover {
+.wantlist-item:not(.item-selected):hover {
     border-color: var(--primary-color);
     transform: translateY(-4px);
     box-shadow: 0 8px 16px rgba(29, 185, 84, 0.2);
 }
 
 .item-image {
+    position: relative;
     width: 100%;
     aspect-ratio: 1;
     overflow: hidden;
@@ -430,6 +431,58 @@ footer a {
 
 footer a:hover {
     color: #1ed760;
+}
+
+.overlay{
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 99;
+}
+
+.overlay.hidden{
+    display: none;
+}
+
+.item-selected{
+    position: absolute;
+    width: 500px;
+    height: auto;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 100;
+}
+
+.item-selected .item-image img {
+    border-radius: 50%;
+    animation: spinning 10s linear infinite;
+}
+
+
+.item-selected .item-image::after{
+    content: "";
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    background-color: rgba(0, 0, 0);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+}
+
+
+@keyframes spinning {
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive design */

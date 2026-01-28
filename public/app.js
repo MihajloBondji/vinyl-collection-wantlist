@@ -1,12 +1,24 @@
 // Configuration
 // Load from config.local.js if available (local development with token)
 // Otherwise use defaults (public version without token)
-let DISCOGS_USERNAME = 'mihajlobondji';
+let DISCOGS_USERNAME = null;
 let DISCOGS_TOKEN = null;
 
-// Try to load local config if it exists
-if (typeof CONFIG !== 'undefined') {
+const queryString = window.location.search;
+const urlParams = new URLSearchParams(queryString);
+
+const tokenParam = urlParams.get('token');
+const usernameParam = urlParams.get('username');
+
+if (usernameParam) {
+    DISCOGS_USERNAME = usernameParam;
+} else if (typeof CONFIG !== 'undefined') {
     DISCOGS_USERNAME = CONFIG.DISCOGS_USERNAME || DISCOGS_USERNAME;
+}
+
+if (tokenParam) {
+    DISCOGS_TOKEN = tokenParam;
+} else if (typeof CONFIG !== 'undefined') {
     DISCOGS_TOKEN = CONFIG.DISCOGS_TOKEN || null;
 }
 
@@ -29,6 +41,7 @@ const VINYL_SHOPS = [
      { text: 'Antishop', url: 'https://antishop.rs/shop/' },
      { text: 'Mascom', url: 'https://www.mascom.rs/sr/muzika.1.90.html?pack[]=4' },
      { text: 'Gramofonik', url: 'https://prodavnicaploca.rs/collections/all' },
+     { text: 'Menart', url: 'https://www.menart.rs/online-shop/' },
      { text: 'Fidbox', url: 'https://fidbox.rs/izdanja/' },
      { text: 'Delfi', url: 'https://delfi.rs/Muzika/zanr/Gramofonske%20plo%C4%8De?limit=50&page=1&isAvailable=true' },
      { text: 'Gigatron', url: 'https://gigatron.rs/tv-audio-video/gramofonske-ploce' },
@@ -151,6 +164,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Load wantlist on page load
     fetchData();
+
+    document.getElementById('overlay').addEventListener('click', () => {
+        document.querySelectorAll('.wantlist-item.item-selected').forEach(item => {
+            item.classList.remove('item-selected');
+        });
+        document.getElementById('overlay').classList.add('hidden');
+    });
 });
 
 function renderShops() {
@@ -346,6 +366,11 @@ function renderWantlist() {
 
     filteredItems.forEach(item => {
         const itemElement = createItemElement(item);
+        itemElement.onclick = () => {
+            itemElement.classList.toggle('item-selected');
+            overlay.classList.remove('hidden');
+            itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
         wantlistContainer.appendChild(itemElement);
     });
 }
@@ -357,13 +382,18 @@ function createItemElement(item) {
     const div = document.createElement('div');
     div.className = 'wantlist-item';
     
-    const imageUrl = item.thumb || PLACEHOLDER_IMAGE;
     const discogsUrl = `https://www.discogs.com/release/${item.id}`;
     
-    div.innerHTML = `
+    let imageHtml = '';
+    if (item.thumb) {
+        imageHtml = `
         <div class="item-image">
-            <img src="${imageUrl}" alt="${item.title}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22150%22%3E%3Crect width=%22150%22 height=%22150%22 fill=%22%23404040%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-family=%22Arial%22 font-size=%2214%22 fill=%22%23b3b3b3%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ENo Image%3C/text%3E%3C/svg%3E'">
-        </div>
+            <img src="${item.thumb}" alt="${item.title}" loading="lazy" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22150%22 height=%22150%22%3E%3Crect width=%22150%22 height=%22150%22 fill=%22%23404040%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 font-family=%22Arial%22 font-size=%2214%22 fill=%22%23b3b3b3%22 text-anchor=%22middle%22 dominant-baseline=%22middle%22%3ENo Image%3C/text%3E%3C/svg%3E'">
+        </div>`;
+    }
+    
+    div.innerHTML = `
+        ${imageHtml}
         <div class="item-details">
             <h3 class="item-title">${escapeHtml(item.title)}</h3>
             <p class="item-artist">${escapeHtml(item.artist)}</p>
