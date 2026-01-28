@@ -323,10 +323,6 @@ header h1 {
     gap: 2rem;
     margin-bottom: 3rem;
 }
- .wantlist-item {
-    overflow: hidden;
-    transition: var(--transition);
-}
 
 .wantlist-item {
     background-color: var(--light-bg);
@@ -334,6 +330,9 @@ header h1 {
     border-radius: 8px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    transition: var(--transition);
+    left: 0;
 }
 
 .wantlist-item:not(.item-selected):hover {
@@ -463,6 +462,21 @@ footer a:hover {
 .list-grid:not(.wantlist-view) .item-selected .item-image img {
     border-radius: 50%;
     animation: spinning 10s linear infinite;
+}
+
+.list-grid:not(.wantlist-view) .item-selected .item-image::before {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 50%;
+    background-image: url('stylus.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: top right;
+    z-index: 100;
 }
 
 
