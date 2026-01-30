@@ -102,6 +102,7 @@ const keepAwakeBtn = document.getElementById('keepAwakeBtn');
 // Wake Lock handling and a single video fallback
 let wakeLock = null;
 let wakeVideoEl = null;
+let toastTimer = null;
 
 async function requestWakeLock() {
     try {
@@ -110,7 +111,7 @@ async function requestWakeLock() {
         return;
     } catch (err) {
         // Show manual start button when API is unavailable or denied
-        showError('Wake Lock unavailable. Tap the keep-awake button to start a looping hidden video fallback.');
+        showTopRightToast('Wake Lock unavailable. Tap the keep-awake button to enable fallback.');
         showKeepAwakeButton(true);
         return;
     }
@@ -126,13 +127,12 @@ async function activateFallbacks() {
     showKeepAwakeButton(false);
     try {
         startVideoWake();
-        showError('Hidden looping video started (may prevent screensaver on some TVs).');
+        showTopRightToast('Hidden looping video started.');
         return;
     } catch (err) {
         console.warn('Video fallback failed on user gesture:', err);
     }
-
-    showError('Video fallback failed. Please try disabling the TV screensaver or running as a PWA/kiosk.');
+    showTopRightToast('Video fallback failed. Try disabling TV screensaver or use PWA/kiosk.');
 }
 
 function stopWakeLockFallbacks() {
@@ -596,6 +596,25 @@ function showLoading(show) {
 function showError(message) {
     errorMessage.textContent = message;
     errorMessage.classList.remove('hidden');
+}
+
+function showTopRightToast(message) {
+    let toast = document.getElementById('topRightToast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'topRightToast';
+        toast.className = 'top-right-toast hidden';
+        document.body.appendChild(toast);
+    }
+    toast.textContent = message;
+    // show
+    toast.classList.remove('hidden');
+    // reset timer
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => {
+        toast.classList.add('hidden');
+        toastTimer = null;
+    }, 3000);
 }
 
 function hideError() {
