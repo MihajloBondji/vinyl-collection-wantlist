@@ -99,23 +99,18 @@ const shopsContainer = document.getElementById('shopsContainer');
 const shopsList = document.getElementById('shopsList');
 const keepAwakeBtn = document.getElementById('keepAwakeBtn');
 
-// Wake Lock API + fallbacks
+// Wake Lock handling and a single video fallback
 let wakeLock = null;
-let audioCtx = null;
-let osc = null;
-let gainNode = null;
-let canvasKeep = null;
-let canvasInterval = null;
-let keepVideo = null;
+let wakeVideoEl = null;
 
 async function requestWakeLock() {
-    // Primary method: Wake Lock API
     try {
         wakeLock = await navigator.wakeLock.request('screen');
         showKeepAwakeButton(false);
         return;
     } catch (err) {
-        // Show a manual fallback button instead of auto-starting fallbacks
+        // Show manual start button when API is unavailable or denied
+        showError('Wake Lock unavailable. Tap the keep-awake button to start a looping hidden video fallback.');
         showKeepAwakeButton(true);
         return;
     }
@@ -123,32 +118,21 @@ async function requestWakeLock() {
 
 function showKeepAwakeButton(show) {
     if (!keepAwakeBtn) return;
-    if (show) {
-        keepAwakeBtn.classList.remove('hidden');
-    } else {
-        keepAwakeBtn.classList.add('hidden');
-    }
+    if (show) keepAwakeBtn.classList.remove('hidden');
+    else keepAwakeBtn.classList.add('hidden');
 }
 
 async function activateFallbacks() {
-    // Attempt audio fallback first (user gesture from click makes this likely to succeed)
     showKeepAwakeButton(false);
     try {
-        startAudioWake();
+        startVideoWake();
+        showError('Hidden looping video started (may prevent screensaver on some TVs).');
         return;
     } catch (err) {
-        console.warn('Audio fallback failed on user gesture:', err);
+        console.warn('Video fallback failed on user gesture:', err);
     }
 
-    // If audio fails, try canvas->video capture
-    try {
-        startCanvasWake();
-        return;
-    } catch (err) {
-        console.warn('Canvas/video fallback failed on user gesture:', err);
-    }
-
-    showError('Fallbacks failed. Please disable the TV screensaver or run as a PWA/kiosk.');
+    showError('Video fallback failed. Please try disabling the TV screensaver or running as a PWA/kiosk.');
 }
 
 function stopWakeLockFallbacks() {
@@ -156,64 +140,36 @@ function stopWakeLockFallbacks() {
         try { wakeLock.release(); } catch (e) {}
         wakeLock = null;
     }
-    stopAudioWake();
-    stopCanvasWake();
+    stopVideoWake();
 }
 
-function startAudioWake() {
-    if (audioCtx && audioCtx.state !== 'closed') return;
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    osc = audioCtx.createOscillator();
-    gainNode = audioCtx.createGain();
-    gainNode.gain.value = 0.0001; // effectively silent
-    osc.type = 'sine';
-    osc.frequency.value = 440;
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    osc.start();
+function startVideoWake() {
+    if (wakeVideoEl) return;
+    wakeVideoEl = document.createElement('video');
+    wakeVideoEl.id = 'wakeVideo';
+    wakeVideoEl.autoplay = true;
+    wakeVideoEl.loop = true;
+    wakeVideoEl.muted = true;
+    wakeVideoEl.playsInline = true;
+    wakeVideoEl.style.position = 'fixed';
+    wakeVideoEl.style.left = '-2000px';
+    wakeVideoEl.style.width = '1px';
+    wakeVideoEl.style.height = '1px';
+    wakeVideoEl.src = 'loop.mp4';
+    document.body.appendChild(wakeVideoEl);
+    wakeVideoEl.play().catch((e) => { console.warn('wakeVideo play failed:', e); });
 }
 
-function stopAudioWake() {
+function stopVideoWake() {
     try {
-        if (osc) { osc.stop(); osc.disconnect(); osc = null; }
-        if (gainNode) { gainNode.disconnect(); gainNode = null; }
-        if (audioCtx) { audioCtx.close(); audioCtx = null; }
+        if (wakeVideoEl) {
+            wakeVideoEl.pause();
+            wakeVideoEl.removeAttribute('src');
+            wakeVideoEl.load();
+            wakeVideoEl.remove();
+            wakeVideoEl = null;
+        }
     } catch (e) { /* ignore */ }
-}
-
-function startCanvasWake() {
-    if (canvasKeep) return;
-    canvasKeep = document.createElement('canvas');
-    canvasKeep.width = 1;
-    canvasKeep.height = 1;
-    const ctx = canvasKeep.getContext('2d');
-    // draw a changing pixel so the stream keeps producing frames
-    let t = 0;
-    canvasInterval = setInterval(() => {
-        ctx.fillStyle = `rgb(${(t%255)},0,0)`;
-        ctx.fillRect(0,0,1,1);
-        t++;
-    }, 1000/5);
-
-    const stream = canvasKeep.captureStream(5);
-    keepVideo = document.createElement('video');
-    keepVideo.autoplay = true;
-    keepVideo.muted = true;
-    keepVideo.playsInline = true;
-    keepVideo.style.width = '1px';
-    keepVideo.style.height = '1px';
-    keepVideo.style.position = 'fixed';
-    keepVideo.style.left = '-100px';
-    keepVideo.style.top = '-100px';
-    keepVideo.srcObject = stream;
-    document.body.appendChild(keepVideo);
-    keepVideo.play().catch(() => {});
-}
-
-function stopCanvasWake() {
-    if (canvasInterval) { clearInterval(canvasInterval); canvasInterval = null; }
-    if (keepVideo) { try { keepVideo.pause(); keepVideo.srcObject = null; keepVideo.remove(); } catch (e) {} keepVideo = null; }
-    if (canvasKeep) { canvasKeep.remove(); canvasKeep = null; }
 }
 
 // Clean up when page is hidden or unloaded
