@@ -97,126 +97,6 @@ const sortDropdown = document.getElementById('sortDropdown');
 const sortLabel = document.getElementById('sortLabel');
 const shopsContainer = document.getElementById('shopsContainer');
 const shopsList = document.getElementById('shopsList');
-const keepAwakeBtn = document.getElementById('keepAwakeBtn');
-
-// Wake Lock handling and a single video fallback
-let wakeLock = null;
-let wakeVideoEl = null;
-let toastTimer = null;
-
-async function requestWakeLock() {
-    try {
-        wakeLock = await navigator.wakeLock.request('screen');
-        showKeepAwakeButton(false);
-        return;
-    } catch (err) {
-        // Show manual start button when API is unavailable or denied
-        showTopRightToast('Wake Lock unavailable. Tap the keep-awake button to enable fallback.');
-        showKeepAwakeButton(true);
-        return;
-    }
-}
-
-function showKeepAwakeButton(show) {
-    if (!keepAwakeBtn) return;
-    if (show) keepAwakeBtn.classList.remove('hidden');
-    else keepAwakeBtn.classList.add('hidden');
-}
-
-async function activateFallbacks() {
-    showKeepAwakeButton(false);
-    try {
-        // Prefer visible fullscreen playback (best chance to prevent TV screensaver)
-        await startFullscreenWake();
-        showTopRightToast('Fullscreen looping video started.');
-        return;
-    } catch (err) {
-        console.warn('Video fallback failed on user gesture:', err);
-    }
-    showTopRightToast('Video fallback failed. Try disabling TV screensaver or use PWA/kiosk.');
-}
-
-async function startFullscreenWake() {
-    // Create a fullscreen visible video element and attempt to play+request fullscreen.
-    // Requires a user gesture (click) to succeed on most TVs/browsers.
-    if (wakeVideoEl) return;
-    wakeVideoEl = document.createElement('video');
-    wakeVideoEl.id = 'wakeVideo';
-    wakeVideoEl.autoplay = true;
-    wakeVideoEl.loop = true;
-    wakeVideoEl.muted = true;
-    wakeVideoEl.playsInline = true;
-    wakeVideoEl.style.position = 'fixed';
-    wakeVideoEl.style.left = '0';
-    wakeVideoEl.style.top = '0';
-    wakeVideoEl.style.width = '100%';
-    wakeVideoEl.style.height = '100%';
-    wakeVideoEl.style.objectFit = 'cover';
-    wakeVideoEl.style.zIndex = '9999';
-    wakeVideoEl.style.background = 'black';
-    wakeVideoEl.src = 'loop.mp4';
-    document.body.appendChild(wakeVideoEl);
-
-    // attempt to play
-    await wakeVideoEl.play();
-
-    // try to request fullscreen on the video element
-    if (wakeVideoEl.requestFullscreen) {
-        try {
-            await wakeVideoEl.requestFullscreen();
-        } catch (_) {
-            // ignore fullscreen failure; playback may still keep screen awake
-        }
-    }
-}
-
-function stopWakeLockFallbacks() {
-    if (wakeLock) {
-        try { wakeLock.release(); } catch (e) {}
-        wakeLock = null;
-    }
-    stopVideoWake();
-}
-
-function startVideoWake() {
-    if (wakeVideoEl) return;
-    wakeVideoEl = document.createElement('video');
-    wakeVideoEl.id = 'wakeVideo';
-    wakeVideoEl.autoplay = true;
-    wakeVideoEl.loop = true;
-    wakeVideoEl.muted = true;
-    wakeVideoEl.playsInline = true;
-    wakeVideoEl.style.position = 'fixed';
-    wakeVideoEl.style.left = '-2000px';
-    wakeVideoEl.style.width = '1px';
-    wakeVideoEl.style.height = '1px';
-    wakeVideoEl.src = 'loop.mp4';
-    document.body.appendChild(wakeVideoEl);
-    wakeVideoEl.play().catch((e) => { console.warn('wakeVideo play failed:', e); });
-}
-
-function stopVideoWake() {
-    try {
-        if (wakeVideoEl) {
-            wakeVideoEl.pause();
-            wakeVideoEl.removeAttribute('src');
-            wakeVideoEl.load();
-            wakeVideoEl.remove();
-            wakeVideoEl = null;
-        }
-    } catch (e) { /* ignore */ }
-}
-
-// Clean up when page is hidden or unloaded
-document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') {
-        stopWakeLockFallbacks();
-    } else {
-        // Try to reacquire when visible
-        if ('wakeLock' in navigator) requestWakeLock();
-    }
-});
-window.addEventListener('beforeunload', stopWakeLockFallbacks);
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -292,29 +172,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById('overlay').classList.add('hidden');
     });
-
-    // Request wake lock when the page loads
-    if ('wakeLock' in navigator) {
-        requestWakeLock();
-
-        // Reapply wake lock if the page visibility changes
-        document.addEventListener('visibilitychange', () => {
-            if (wakeLock !== null && document.visibilityState === 'visible') {
-                requestWakeLock();
-            }
-        });
-    } else {
-        showKeepAwakeButton(true);
-    }
-
-    // Keep-awake button behavior (manual activation of fallbacks)
-    if (keepAwakeBtn) {
-        keepAwakeBtn.addEventListener('click', () => {
-            activateFallbacks();
-        });
-        // Hidden by default
-        showKeepAwakeButton(false);
-    }
 });
 
 function renderShops() {
@@ -631,25 +488,6 @@ function showLoading(show) {
 function showError(message) {
     errorMessage.textContent = message;
     errorMessage.classList.remove('hidden');
-}
-
-function showTopRightToast(message) {
-    let toast = document.getElementById('topRightToast');
-    if (!toast) {
-        toast = document.createElement('div');
-        toast.id = 'topRightToast';
-        toast.className = 'top-right-toast hidden';
-        document.body.appendChild(toast);
-    }
-    toast.textContent = message;
-    // show
-    toast.classList.remove('hidden');
-    // reset timer
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => {
-        toast.classList.add('hidden');
-        toastTimer = null;
-    }, 3000);
 }
 
 function hideError() {
