@@ -46,7 +46,7 @@ header {
 .header-top {
     display: flex;
     justify-content: center;
-    margin-top: 2rem;
+    margin-top: 4rem;
     margin-bottom: 1rem;
 }
 
@@ -546,4 +546,44 @@ footer a:hover {
     .item-details {
         padding: 0.75rem;
     }
+}
+
+/* Keep-awake floating button */
+.keep-awake-btn {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 300;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: var(--light-bg);
+    border: 2px solid var(--primary-color);
+    color: var(--primary-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+/* fallback was using CSS mask; using inline SVG now for better compatibility */
+
+/* Inline SVG inside the button */
+.keep-awake-btn .keep-awake-icon {
+    width: 18px;
+    height: 18px;
+    display: block;
+    color: var(--primary-color);
+}
+
+.keep-awake-btn .keep-awake-icon path { fill: currentColor; }
+
+.keep-awake-btn:hover {
+    box-shadow: 0 4px 8px var(--primary-color-hover);
+    color: var(--dark-bg);
+}
+
+.keep-awake-btn.hidden {
+    display: none;
 }

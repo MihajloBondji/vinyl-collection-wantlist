@@ -97,18 +97,135 @@ const sortDropdown = document.getElementById('sortDropdown');
 const sortLabel = document.getElementById('sortLabel');
 const shopsContainer = document.getElementById('shopsContainer');
 const shopsList = document.getElementById('shopsList');
+const keepAwakeBtn = document.getElementById('keepAwakeBtn');
 
-// Wake Lock API
+// Wake Lock API + fallbacks
 let wakeLock = null;
+let audioCtx = null;
+let osc = null;
+let gainNode = null;
+let canvasKeep = null;
+let canvasInterval = null;
+let keepVideo = null;
 
 async function requestWakeLock() {
+    // Primary method: Wake Lock API
     try {
         wakeLock = await navigator.wakeLock.request('screen');
-        alert('Wake Lock is active');
+        showKeepAwakeButton(false);
+        return;
     } catch (err) {
-        alert(`Wake Lock failed: ${err.name}, ${err.message}`);
+        // Show a manual fallback button instead of auto-starting fallbacks
+        showKeepAwakeButton(true);
+        return;
     }
 }
+
+function showKeepAwakeButton(show) {
+    if (!keepAwakeBtn) return;
+    if (show) {
+        keepAwakeBtn.classList.remove('hidden');
+    } else {
+        keepAwakeBtn.classList.add('hidden');
+    }
+}
+
+async function activateFallbacks() {
+    // Attempt audio fallback first (user gesture from click makes this likely to succeed)
+    showKeepAwakeButton(false);
+    try {
+        startAudioWake();
+        return;
+    } catch (err) {
+        console.warn('Audio fallback failed on user gesture:', err);
+    }
+
+    // If audio fails, try canvas->video capture
+    try {
+        startCanvasWake();
+        return;
+    } catch (err) {
+        console.warn('Canvas/video fallback failed on user gesture:', err);
+    }
+
+    showError('Fallbacks failed. Please disable the TV screensaver or run as a PWA/kiosk.');
+}
+
+function stopWakeLockFallbacks() {
+    if (wakeLock) {
+        try { wakeLock.release(); } catch (e) {}
+        wakeLock = null;
+    }
+    stopAudioWake();
+    stopCanvasWake();
+}
+
+function startAudioWake() {
+    if (audioCtx && audioCtx.state !== 'closed') return;
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    osc = audioCtx.createOscillator();
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0.0001; // effectively silent
+    osc.type = 'sine';
+    osc.frequency.value = 440;
+    osc.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    osc.start();
+}
+
+function stopAudioWake() {
+    try {
+        if (osc) { osc.stop(); osc.disconnect(); osc = null; }
+        if (gainNode) { gainNode.disconnect(); gainNode = null; }
+        if (audioCtx) { audioCtx.close(); audioCtx = null; }
+    } catch (e) { /* ignore */ }
+}
+
+function startCanvasWake() {
+    if (canvasKeep) return;
+    canvasKeep = document.createElement('canvas');
+    canvasKeep.width = 1;
+    canvasKeep.height = 1;
+    const ctx = canvasKeep.getContext('2d');
+    // draw a changing pixel so the stream keeps producing frames
+    let t = 0;
+    canvasInterval = setInterval(() => {
+        ctx.fillStyle = `rgb(${(t%255)},0,0)`;
+        ctx.fillRect(0,0,1,1);
+        t++;
+    }, 1000/5);
+
+    const stream = canvasKeep.captureStream(5);
+    keepVideo = document.createElement('video');
+    keepVideo.autoplay = true;
+    keepVideo.muted = true;
+    keepVideo.playsInline = true;
+    keepVideo.style.width = '1px';
+    keepVideo.style.height = '1px';
+    keepVideo.style.position = 'fixed';
+    keepVideo.style.left = '-100px';
+    keepVideo.style.top = '-100px';
+    keepVideo.srcObject = stream;
+    document.body.appendChild(keepVideo);
+    keepVideo.play().catch(() => {});
+}
+
+function stopCanvasWake() {
+    if (canvasInterval) { clearInterval(canvasInterval); canvasInterval = null; }
+    if (keepVideo) { try { keepVideo.pause(); keepVideo.srcObject = null; keepVideo.remove(); } catch (e) {} keepVideo = null; }
+    if (canvasKeep) { canvasKeep.remove(); canvasKeep = null; }
+}
+
+// Clean up when page is hidden or unloaded
+document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden') {
+        stopWakeLockFallbacks();
+    } else {
+        // Try to reacquire when visible
+        if ('wakeLock' in navigator) requestWakeLock();
+    }
+});
+window.addEventListener('beforeunload', stopWakeLockFallbacks);
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -196,7 +313,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     } else {
-        alert('Wake Lock API is not supported in this browser.');
+        showKeepAwakeButton(true);
+    }
+
+    // Keep-awake button behavior (manual activation of fallbacks)
+    if (keepAwakeBtn) {
+        keepAwakeBtn.addEventListener('click', () => {
+            activateFallbacks();
+        });
+        // Hidden by default
+        showKeepAwakeButton(false);
     }
 });
 
