@@ -42,6 +42,7 @@ const VINYL_SHOPS = [
      { text: 'Mascom', url: 'https://www.mascom.rs/sr/muzika.1.90.html?pack[]=4' },
      { text: 'Gramofonik', url: 'https://prodavnicaploca.rs/collections/all' },
      { text: 'Menart', url: 'https://www.menart.rs/online-shop/' },
+     { text: 'Black screen records', url: 'https://blackscreenrecords.com/collections/vinyl' },
      { text: 'Fidbox', url: 'https://fidbox.rs/izdanja/' },
      { text: 'Delfi', url: 'https://delfi.rs/Muzika/zanr/Gramofonske%20plo%C4%8De?limit=50&page=1&isAvailable=true' },
      { text: 'Gigatron', url: 'https://gigatron.rs/tv-audio-video/gramofonske-ploce' },
@@ -96,6 +97,18 @@ const sortDropdown = document.getElementById('sortDropdown');
 const sortLabel = document.getElementById('sortLabel');
 const shopsContainer = document.getElementById('shopsContainer');
 const shopsList = document.getElementById('shopsList');
+
+// Wake Lock API
+let wakeLock = null;
+
+async function requestWakeLock() {
+    try {
+        wakeLock = await navigator.wakeLock.request('screen');
+        alert('Wake Lock is active');
+    } catch (err) {
+        alert(`Wake Lock failed: ${err.name}, ${err.message}`);
+    }
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -171,6 +184,20 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById('overlay').classList.add('hidden');
     });
+
+    // Request wake lock when the page loads
+    if ('wakeLock' in navigator) {
+        requestWakeLock();
+
+        // Reapply wake lock if the page visibility changes
+        document.addEventListener('visibilitychange', () => {
+            if (wakeLock !== null && document.visibilityState === 'visible') {
+                requestWakeLock();
+            }
+        });
+    } else {
+        alert('Wake Lock API is not supported in this browser.');
+    }
 });
 
 function renderShops() {
