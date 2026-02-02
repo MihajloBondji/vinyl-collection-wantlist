@@ -25,6 +25,30 @@ if (tokenParam) {
 const DISCOGS_API_BASE = 'https://api.discogs.com';
 const ITEMS_PER_PAGE = 250; // Discogs API limit
 
+let divider = 6;
+switch(true) {
+    case (window.innerWidth > 1390):
+        divider = 6;
+        break;
+    case (window.innerWidth > 1160):
+        divider = 5;
+        break;
+    case (window.innerWidth > 930):
+        divider = 4;
+        break;
+    case (window.innerWidth > 770):
+        divider = 3;
+        break;
+    case (window.innerWidth > 680):
+        divider = 4;
+        break;
+    case (window.innerWidth > 514):
+        divider = 3;
+        break;
+    default:
+        divider = 2;
+}
+
 // State management
 let allItems = [];
 let filteredItems = [];
@@ -419,7 +443,8 @@ function renderWantlist() {
 
     filteredItems.forEach((item, index) => {
         const itemElement = createItemElement(item);
-        itemElement.style.setProperty('--i', index%6);
+        const indexElement = index % divider;
+        itemElement.style.setProperty('--i', indexElement);
         itemElement.onclick = () => {
             itemElement.classList.add('item-selected');
             overlay.classList.remove('hidden');
@@ -496,7 +521,8 @@ function renderCollectionSection(section, items) {
 
     items.forEach((item, index) => {
         const itemElement = createItemElement(item);
-        itemElement.style.setProperty('--i', index%6);
+        const indexElement = index % divider;
+        itemElement.style.setProperty('--i', indexElement);
         itemElement.onclick = () => {
             itemElement.classList.add('item-selected');
             overlay.classList.remove('hidden');

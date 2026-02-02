@@ -386,7 +386,7 @@ header h1 {
 }
 
 .list-grid:not(.wantlist-view) .wantlist-item {
-    transform: translateX(calc(var(--i) * -210px)) rotateY(80deg);
+    transform: translateX(calc(var(--i) * -250px)) rotateY(80deg);
     animation: marginSlide 1.5s ease-in forwards;
 }
 
@@ -398,7 +398,7 @@ header h1 {
 
 @keyframes marginSlide {
     from {
-        transform: translateX(calc(var(--i) * -210px)) rotateY(80deg);
+        transform: translateX(calc(var(--i) * -220px)) rotateY(80deg);
     }
     to {
         transform: translateX(0) rotateY(0deg);
