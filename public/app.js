@@ -28,29 +28,27 @@ const ITEMS_PER_PAGE = 250; // Discogs API limit
 // State management
 let allItems = [];
 let filteredItems = [];
-let currentSort = 'date-desc';
+let currentSort = 'artist-asc';
 let currentPath = '/collection';
-
-// Titles to always place at the end
-const PINNED_TO_END = ['Hydraulika', 'Liturgija'];
 
 // Vinyl shops - add your shops here
 const VINYL_SHOPS = [
-     { text: 'Metropolis Music', url: 'https://www.metropolismusic.rs/prodavnica-ploca/albums.html' },
-     { text: 'Ammonite', url: 'https://www.ammonite.rs/vinil.html' },
-     { text: 'Antishop', url: 'https://antishop.rs/shop/' },
-     { text: 'Mascom', url: 'https://www.mascom.rs/sr/muzika.1.90.html?pack[]=4' },
-     { text: 'Gramofonik', url: 'https://prodavnicaploca.rs/collections/all' },
-     { text: 'Menart', url: 'https://www.menart.rs/online-shop/' },
-     { text: 'Black screen records', url: 'https://blackscreenrecords.com/collections/vinyl' },
-     { text: 'Fidbox', url: 'https://fidbox.rs/izdanja/' },
-     { text: 'Delfi', url: 'https://delfi.rs/Muzika/zanr/Gramofonske%20plo%C4%8De?limit=50&page=1&isAvailable=true' },
-     { text: 'Gigatron', url: 'https://gigatron.rs/tv-audio-video/gramofonske-ploce' },
-     { text: 'KupujemProdajem', url: 'https://www.kupujemprodajem.com/antikvarnica-stepa/svi-oglasi/2020719/1?categoryId=1176' },
-     { text: 'Discogs', url: 'https://www.discogs.com/sell/list?format=Vinyl&ships_from=Serbia' },
-     { text: 'Dirty Old Empire', url: 'https://www.dirtyoldempire.com/kategorija-proizvoda/vinyl-2/' },
-     { text: 'Yugovinyl', url: 'https://www.google.com/maps/place/Yugovinyl/@44.8179221,20.4632067,17z/data=!3m1!4b1!4m6!3m5!1s0x475a7a9b40ab658b:0xefe9ee21b36dd60a!8m2!3d44.8179221!4d20.4657816!16s%2Fg%2F11_qycdyq?entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoASAFQAw%3D%3D' },
-];
+     { text: 'Metropolis Music', url: 'https://www.metropolismusic.rs/prodavnica-ploca/albums.html', tag: 'local' },
+     { text: 'Ammonite', url: 'https://www.ammonite.rs/vinil.html', tag: 'local' },
+     { text: 'Antishop', url: 'https://antishop.rs/shop/', tag: 'local' },
+     { text: 'Mascom', url: 'https://www.mascom.rs/sr/muzika.1.90.html?pack[]=4', tag: 'local' },
+     { text: 'Gramofonik', url: 'https://prodavnicaploca.rs/collections/all', tag: 'local' },
+     { text: 'Menart', url: 'https://www.menart.rs/online-shop/', tag: 'local' },
+     { text: 'Black screen records', url: 'https://blackscreenrecords.com/collections/vinyl', tag: 'foreign', starred: true },
+     { text: 'Rarewaves', url: 'https://www.rarewaves.com/pages/vinyl', tag: 'foreign', starred: true },
+     { text: 'Fidbox', url: 'https://fidbox.rs/izdanja/', tag: 'local', starred: true },
+     { text: 'Delfi', url: 'https://delfi.rs/Muzika/zanr/Gramofonske%20plo%C4%8De?limit=50&page=1&isAvailable=true', tag: 'local', starred: true },
+     { text: 'Gigatron', url: 'https://gigatron.rs/tv-audio-video/gramofonske-ploce', tag: 'local' },
+     { text: 'KupujemProdajem', url: 'https://www.kupujemprodajem.com/antikvarnica-stepa/svi-oglasi/2020719/1?categoryId=1176', tag: 'local' },
+     { text: 'Discogs', url: 'https://www.discogs.com/sell/list?format=Vinyl&ships_from=Serbia', tag: 'foreign' },
+     { text: 'Dirty Old Empire', url: 'https://www.dirtyoldempire.com/kategorija-proizvoda/vinyl-2/', tag: 'foreign' },
+     { text: 'Yugovinyl', url: 'https://www.google.com/maps/place/Yugovinyl/@44.8179221,20.4632067,17z/data=!3m1!4b1!4m6!3m5!1s0x475a7a9b40ab658b:0xefe9ee21b36dd60a!8m2!3d44.8179221!4d20.4657816!16s%2Fg%2F11_qycdyq?entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoASAFQAw%3D%3D', tag: 'local' },
+].sort((a, b) => a.text.localeCompare(b.text)).sort((a, b) => b.tag.localeCompare(a.tag));
 
 // Cache keys
 const CACHE_KEYS = {
@@ -97,6 +95,7 @@ const sortDropdown = document.getElementById('sortDropdown');
 const sortLabel = document.getElementById('sortLabel');
 const shopsContainer = document.getElementById('shopsContainer');
 const shopsList = document.getElementById('shopsList');
+let collectionSections = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
@@ -185,8 +184,8 @@ function renderShops() {
         const link = document.createElement('a');
         link.href = shop.url;
         link.target = '_blank';
-        link.className = 'shop-link';
         link.textContent = shop.text;
+        link.className = `shop-link ${shop.tag} ${shop.starred ? 'starred' : ''}`;
         shopsList.appendChild(link);
     });
     
@@ -303,6 +302,22 @@ async function fetchCollection() {
     }
 }
 
+function parseNotesTag(rawNotes) {
+    if (!rawNotes) {
+        return { notes: '', tag: '' };
+    }
+
+    const trimmed = String(rawNotes).trim();
+    const tagMatch = trimmed.match(/^([FDU])-/i);
+    if (!tagMatch) {
+        return { notes: trimmed, tag: '' };
+    }
+
+    const tag = tagMatch[1].toUpperCase();
+    const notes = trimmed.slice(2).trim();
+    return { notes, tag };
+}
+
 async function fetchItems(apiUrl) {
     try {
         let page = 1;
@@ -329,6 +344,9 @@ async function fetchItems(apiUrl) {
             if (Array.isArray(items)) {
                 items.forEach(item => {
                     const basicInfo = item.basic_information || item;
+                    const rawNotes = (Array.isArray(item.notes) && item.notes.find(n => n.field_id === 3)?.value) || '';
+                    const parsedNotes = parseNotesTag(rawNotes);
+
                     allItems.push({
                         id: item.id,
                         title: basicInfo.title,
@@ -339,7 +357,8 @@ async function fetchItems(apiUrl) {
                         resourceUrl: item.resource_url,
                         dateAdded: item.date_added || new Date().toISOString(),
                         format: basicInfo.formats?.[0]?.name || 'Unknown',
-                        notes: (Array.isArray(item.notes) && item.notes.find(n => n.field_id === 3)?.value) || ''
+                        notes: parsedNotes.notes,
+                        tag: parsedNotes.tag
                     });
                 });
             }
@@ -368,14 +387,122 @@ function renderWantlist() {
         return;
     }
 
-    filteredItems.forEach(item => {
+    ensureCollectionSections();
+
+    if (currentPath === '/collection') {
+        const domesticItems = [];
+        const foreignItems = [];
+        const uncategorizedItems = [];
+
+        filteredItems.forEach(item => {
+            const tag = (item.tag || '').toUpperCase();
+            if (tag === 'D') {
+                domesticItems.push(item);
+            } else if (tag === 'F') {
+                foreignItems.push(item);
+            } else {
+                uncategorizedItems.push(item);
+            }
+        });
+
+        wantlistContainer.style.display = 'none';
+        setCollectionSectionsVisibility(true);
+
+        renderCollectionSection(collectionSections.foreign, foreignItems);
+        renderCollectionSection(collectionSections.domestic, domesticItems);
+        renderCollectionSection(collectionSections.uncategorized, uncategorizedItems);
+        return;
+    }
+
+    wantlistContainer.style.display = '';
+    setCollectionSectionsVisibility(false);
+
+    filteredItems.forEach((item, index) => {
         const itemElement = createItemElement(item);
+        itemElement.style.setProperty('--i', index%6);
         itemElement.onclick = () => {
             itemElement.classList.add('item-selected');
             overlay.classList.remove('hidden');
             itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }
+        };
         wantlistContainer.appendChild(itemElement);
+    });
+}
+
+function ensureCollectionSections() {
+    if (collectionSections) {
+        return;
+    }
+
+    const insertAfter = (node, newNode) => {
+        node.insertAdjacentElement('afterend', newNode);
+        return newNode;
+    };
+
+    let anchor = wantlistContainer;
+
+    const foreign = createCollectionSection('Foreign');
+    anchor = insertAfter(anchor, foreign.title);
+    anchor = insertAfter(anchor, foreign.grid);
+    
+    const domestic = createCollectionSection('Domestic');
+    anchor = insertAfter(anchor, domestic.title);
+    anchor = insertAfter(anchor, domestic.grid);
+
+    const uncategorized = createCollectionSection('Uncategorized');
+    anchor = insertAfter(anchor, uncategorized.title);
+    insertAfter(anchor, uncategorized.grid);
+
+    collectionSections = {
+        domestic,
+        foreign,
+        uncategorized
+    };
+}
+
+function createCollectionSection(titleText) {
+    const title = document.createElement('h2');
+    title.className = 'collection-section-title';
+    title.textContent = titleText;
+
+    const grid = document.createElement('div');
+    grid.className = 'list-grid collection-grid';
+
+    return { title, grid };
+}
+
+function setCollectionSectionsVisibility(visible) {
+    if (!collectionSections) {
+        return;
+    }
+
+    const displayValue = visible ? '' : 'none';
+    Object.values(collectionSections).forEach(section => {
+        section.title.style.display = displayValue;
+        section.grid.style.display = displayValue;
+    });
+}
+
+function renderCollectionSection(section, items) {
+    section.grid.innerHTML = '';
+
+    if (items.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'empty-state';
+        empty.innerHTML = '<p>No items</p>';
+        section.grid.appendChild(empty);
+        return;
+    }
+
+    items.forEach((item, index) => {
+        const itemElement = createItemElement(item);
+        itemElement.style.setProperty('--i', index%6);
+        itemElement.onclick = () => {
+            itemElement.classList.add('item-selected');
+            overlay.classList.remove('hidden');
+            itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        };
+        section.grid.appendChild(itemElement);
     });
 }
 
@@ -423,58 +550,24 @@ function handleSearch(e) {
 }
 
 function applySort() {
-    // Separate items into normal and pinned-to-end
-    const normalItems = [];
-    const pinnedItems = [];
-    
-    filteredItems.forEach(item => {
-        if (PINNED_TO_END.includes(item.title)) {
-            pinnedItems.push(item);
-        } else {
-            normalItems.push(item);
-        }
-    });
-    
-    // Sort normal items
+    // Sort items
     switch(currentSort) {
         case 'date-desc':
-            normalItems.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+            filteredItems.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
             break;
         case 'date-asc':
-            normalItems.sort((a, b) => new Date(a.dateAdded) - new Date(b.dateAdded));
+            filteredItems.sort((a, b) => new Date(a.dateAdded) - new Date(b.dateAdded));
             break;
         case 'title-asc':
-            normalItems.sort((a, b) => a.title.localeCompare(b.title));
+            filteredItems.sort((a, b) => a.title.localeCompare(b.title));
             break;
         case 'title-desc':
-            normalItems.sort((a, b) => b.title.localeCompare(a.title));
+            filteredItems.sort((a, b) => b.title.localeCompare(a.title));
             break;
         case 'artist-asc':
-            normalItems.sort((a, b) => a.artist.localeCompare(b.artist));
+            filteredItems.sort((a, b) => a.artist.localeCompare(b.artist));
             break;
     }
-    
-    // Also sort pinned items by same criteria
-    switch(currentSort) {
-        case 'date-desc':
-            pinnedItems.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-            break;
-        case 'date-asc':
-            pinnedItems.sort((a, b) => new Date(a.dateAdded) - new Date(b.dateAdded));
-            break;
-        case 'title-asc':
-            pinnedItems.sort((a, b) => a.title.localeCompare(b.title));
-            break;
-        case 'title-desc':
-            pinnedItems.sort((a, b) => b.title.localeCompare(a.title));
-            break;
-        case 'artist-asc':
-            pinnedItems.sort((a, b) => a.artist.localeCompare(b.artist));
-            break;
-    }
-    
-    // Combine: normal items first, then pinned items
-    filteredItems = [...normalItems, ...pinnedItems];
 }
 
 function showLoading(show) {

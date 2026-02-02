@@ -256,6 +256,7 @@ header h1 {
 }
 
 .shop-link {
+    position: relative;
     padding: 0.75rem 1.5rem;
     background-color: var(--dark-bg);
     border: 1px solid var(--primary-color);
@@ -271,6 +272,42 @@ header h1 {
     background-color: var(--primary-color);
     color: var(--dark-bg);
     transform: translateY(-2px);
+}
+
+.starred::after{
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: block;
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    background-color: var(--primary-color);
+}
+
+.foreign{
+    border-color: #4db6ac;
+    color: #4db6ac;
+}
+
+.foreign::after{
+    background-color: #4db6ac;
+}
+
+.foreign:hover{
+    background-color: #4db6ac;
+    color: #191414;
+}
+
+.universal{
+    border-color: #f06292;
+    color: #f06292;
+}
+
+.universal:hover{
+    background-color: #f06292;
+    color: #191414;
 }
 
 /* Loading spinner */
@@ -318,11 +355,24 @@ header h1 {
 }
 
 /* Wantlist Grid */
-.list-grid {
+.list-grid { 
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 2rem;
     margin-bottom: 3rem;
+    perspective: 1000px;
+    perspective-origin: top;
+}
+
+.list-grid:has(.item-selected){
+    perspective: unset;
+}
+
+.collection-section-title{
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 2rem 0 1rem 0;
+    color: var(--text-primary);
 }
 
 .wantlist-item {
@@ -333,7 +383,11 @@ header h1 {
     flex-direction: column;
     overflow: hidden;
     transition: var(--transition);
-    left: 0;
+}
+
+.list-grid:not(.wantlist-view) .wantlist-item {
+    transform: translateX(calc(var(--i) * -210px)) rotateY(80deg);
+    animation: marginSlide 1.5s ease-in forwards;
 }
 
 .wantlist-item:not(.item-selected):hover {
@@ -341,6 +395,16 @@ header h1 {
     transform: translateY(-4px);
     box-shadow: 0 8px 16px var(--primary-color-hover);
 }
+
+@keyframes marginSlide {
+    from {
+        transform: translateX(calc(var(--i) * -210px)) rotateY(80deg);
+    }
+    to {
+        transform: translateX(0) rotateY(0deg);
+    }
+}
+
 
 .item-image {
     position: relative;
@@ -362,10 +426,28 @@ header h1 {
 }
 
 .item-details{
-    padding: 1rem;
+    padding: 0 1rem;
     display: flex;
     flex-direction: column;
     flex: 1;
+    max-height: 0;
+    animation: slideUp 0.5s ease-in forwards;
+    animation-delay: 1.8s;
+}
+
+.list-grid.wantlist-view .item-details{
+    animation-delay: 0s;
+}
+
+@keyframes slideUp {
+    from {
+        max-height: 0;
+        padding: 0 1rem;
+    }
+    to {
+        max-height: 200px;
+        padding: 1rem;
+    }
 }
 
 .item-title{
@@ -458,7 +540,7 @@ footer a:hover {
     max-width: 90%;
     height: auto;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(-50%) !important;
     z-index: 100;
 }
 
