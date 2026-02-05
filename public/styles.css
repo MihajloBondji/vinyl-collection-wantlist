@@ -29,6 +29,33 @@ body {
     line-height: 1.6;
 }
 
+/* Scrollbar styles */
+::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--dark-bg);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 10px;
+    border: 2px solid var(--dark-bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+/* Firefox scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) var(--dark-bg);
+}
+
 /* Container */
 .container {
     max-width: 1400px;
@@ -38,16 +65,46 @@ body {
 
 /* Header */
 header {
-    padding: var(--spacing-unit);
+    padding: var(--spacing-unit) 0;
     border-bottom: 1px solid var(--border-color);
     margin-bottom: 2rem;
 }
 
 .header-top {
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
+    align-items: center;
     margin-top: 4rem;
     margin-bottom: 1rem;
+}
+
+/* Language Selector */
+.language-selector {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.lang-btn {
+    padding: 0.5rem 1rem;
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    border-radius: 4px;
+}
+
+.lang-btn:hover {
+    background-color: var(--primary-color-hover);
+    color: var(--primary-color);
+}
+
+.lang-btn.active {
+    background-color: var(--primary-color);
+    color: var(--dark-bg);
+    border-color: var(--primary-color);
 }
 
 header h1 {
@@ -126,7 +183,6 @@ header h1 {
 /* Custom Select */
 .custom-select {
     position: relative;
-    min-width: 180px;
 }
 
 .sort-select {
@@ -534,6 +590,10 @@ footer a:hover {
     display: none;
 }
 
+.collection-section-title.hidden, .list-grid.hidden{
+    display: none;
+}
+
 .item-selected{
     position: absolute;
     width: 500px;
@@ -588,6 +648,112 @@ footer a:hover {
     }
 }
 
+/* Help popup */
+.help-popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 1rem;
+}
+
+.help-popup.hidden {
+    display: none;
+}
+
+.help-popup-content {
+    background-color: var(--light-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    max-width: 700px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    position: relative;
+    padding: 2rem;
+}
+
+.help-close {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 2rem;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: var(--transition);
+}
+
+.help-close:hover {
+    background-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+.help-title {
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-size: 1.8rem;
+}
+
+.help-body {
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.help-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.help-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.help-section-title {
+    color: var(--text-primary);
+    font-size: 1.3rem;
+    margin-bottom: 1rem;
+}
+
+.help-section-content {
+    color: var(--text-secondary);
+}
+
+.help-section-content strong {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.help-section-content code {
+    background-color: var(--dark-bg);
+    padding: 0.2rem 0.5rem;
+    border-radius: 3px;
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: var(--primary-color);
+}
+
+.footer-separator {
+    margin: 0 0.5rem;
+    color: var(--text-secondary);
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     header h1 {
@@ -611,6 +777,19 @@ footer a:hover {
         grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
         gap: 1rem;
     }
+
+    .help-popup-content {
+        padding: 1.5rem;
+        max-height: 90vh;
+    }
+
+    .help-title {
+        font-size: 1.5rem;
+    }
+
+    .help-section-title {
+        font-size: 1.1rem;
+    }
 }
 
 @media (max-width: 480px) {
@@ -629,5 +808,14 @@ footer a:hover {
 
     .item-details {
         padding: 0.75rem;
+    }
+
+    .help-popup-content {
+        padding: 1rem;
+    }
+
+    .help-close {
+        top: 0.5rem;
+        right: 0.5rem;
     }
 }

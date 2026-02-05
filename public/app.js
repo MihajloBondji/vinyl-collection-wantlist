@@ -54,31 +54,35 @@ let allItems = [];
 let filteredItems = [];
 let currentSort = 'artist-asc';
 let currentPath = '/collection';
+let searchTimeout;
 
 // Vinyl shops - add your shops here
 const VINYL_SHOPS = [
-     { text: 'Metropolis Music', url: 'https://www.metropolismusic.rs/prodavnica-ploca/albums.html', tag: 'local' },
-     { text: 'Ammonite', url: 'https://www.ammonite.rs/vinil.html', tag: 'local' },
-     { text: 'Antishop', url: 'https://antishop.rs/shop/', tag: 'local' },
-     { text: 'Mascom', url: 'https://www.mascom.rs/sr/muzika.1.90.html?pack[]=4', tag: 'local' },
-     { text: 'Gramofonik', url: 'https://prodavnicaploca.rs/collections/all', tag: 'local' },
-     { text: 'Menart', url: 'https://www.menart.rs/online-shop/', tag: 'local' },
+     { text: 'Metropolis Music', url: 'https://www.metropolismusic.rs/prodavnica-ploca/albums.html', tag: 'domestic' },
+     { text: 'Ammonite', url: 'https://www.ammonite.rs/vinil.html', tag: 'domestic' },
+     { text: 'Antishop', url: 'https://antishop.rs/shop/', tag: 'domestic' },
+     { text: 'Mascom', url: 'https://www.mascom.rs/sr/muzika.1.90.html?pack[]=4', tag: 'domestic' },
+     { text: 'Gramofonik', url: 'https://prodavnicaploca.rs/collections/all', tag: 'domestic' },
+     { text: 'Menart', url: 'https://www.menart.rs/online-shop/', tag: 'domestic' },
      { text: 'Black screen records', url: 'https://blackscreenrecords.com/collections/vinyl', tag: 'foreign', starred: true },
      { text: 'Rarewaves', url: 'https://www.rarewaves.com/pages/vinyl', tag: 'foreign', starred: true },
-     { text: 'Fidbox', url: 'https://fidbox.rs/izdanja/', tag: 'local', starred: true },
-     { text: 'Delfi', url: 'https://delfi.rs/Muzika/zanr/Gramofonske%20plo%C4%8De?limit=50&page=1&isAvailable=true', tag: 'local', starred: true },
-     { text: 'Gigatron', url: 'https://gigatron.rs/tv-audio-video/gramofonske-ploce', tag: 'local' },
-     { text: 'KupujemProdajem', url: 'https://www.kupujemprodajem.com/antikvarnica-stepa/svi-oglasi/2020719/1?categoryId=1176', tag: 'local' },
+     { text: 'Fidbox', url: 'https://fidbox.rs/izdanja/', tag: 'domestic', starred: true },
+     { text: 'Delfi', url: 'https://delfi.rs/Muzika/zanr/Gramofonske%20plo%C4%8De?limit=50&page=1&isAvailable=true', tag: 'domestic', starred: true },
+     { text: 'Gigatron', url: 'https://gigatron.rs/tv-audio-video/gramofonske-ploce', tag: 'domestic' },
+     { text: 'KupujemProdajem', url: 'https://www.kupujemprodajem.com/antikvarnica-stepa/svi-oglasi/2020719/1?categoryId=1176', tag: 'domestic' },
      { text: 'Discogs', url: 'https://www.discogs.com/sell/list?format=Vinyl&ships_from=Serbia', tag: 'foreign' },
      { text: 'Dirty Old Empire', url: 'https://www.dirtyoldempire.com/kategorija-proizvoda/vinyl-2/', tag: 'foreign' },
-     { text: 'Yugovinyl', url: 'https://www.google.com/maps/place/Yugovinyl/@44.8179221,20.4632067,17z/data=!3m1!4b1!4m6!3m5!1s0x475a7a9b40ab658b:0xefe9ee21b36dd60a!8m2!3d44.8179221!4d20.4657816!16s%2Fg%2F11_qycdyq?entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoASAFQAw%3D%3D', tag: 'local' },
+     { text: 'Jugoton', url: 'https://jugoton.net/product-category/lp/', tag: 'domestic' },
+     { text: 'Yugovinyl', url: 'https://www.google.com/maps/place/Yugovinyl/@44.8179221,20.4632067,17z/data=!3m1!4b1!4m6!3m5!1s0x475a7a9b40ab658b:0xefe9ee21b36dd60a!8m2!3d44.8179221!4d20.4657816!16s%2Fg%2F11_qycdyq?entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoASAFQAw%3D%3D', tag: 'domestic' },
 ].sort((a, b) => a.text.localeCompare(b.text)).sort((a, b) => b.tag.localeCompare(a.tag));
 
-// Cache keys
-const CACHE_KEYS = {
-    wantlist: 'discogs_wantlist_cache',
-    collection: 'discogs_collection_cache'
-};
+// Cache keys - made per-username to prevent mixing lists
+function getCacheKeys(username) {
+    return {
+        wantlist: `discogs_wantlist_cache_${username}`,
+        collection: `discogs_collection_cache_${username}`
+    };
+}
 
 // Helper functions for localStorage
 function getCache(key) {
@@ -122,7 +126,11 @@ const shopsList = document.getElementById('shopsList');
 let collectionSections = null;
 
 // Initialize
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load languages first
+    await loadLanguages();
+    updateUIText();
+    
     // Check for query parameter to determine which view to load
     const urlParams = new URLSearchParams(window.location.search);
     const viewParam = urlParams.get('view');
@@ -144,25 +152,84 @@ document.addEventListener('DOMContentLoaded', () => {
     
     refreshBtn.addEventListener('click', () => {
         // Clear cache on refresh
+        const CACHE_KEYS = getCacheKeys(DISCOGS_USERNAME);
         clearCache(CACHE_KEYS.wantlist);
         clearCache(CACHE_KEYS.collection);
         fetchData();
     });
-    searchInput.addEventListener('input', handleSearch);
     
-    // Custom select functionality
-    sortBtn.addEventListener('click', toggleSortDropdown);
-    document.addEventListener('click', closeSortDropdown);
+    // Search input with debounce
+    searchInput.addEventListener('input', (e) => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            handleSearch(e);
+        }, 1000);
+    });
+    
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            clearTimeout(searchTimeout);
+            handleSearch(e);
+        }
+    });
+    
+    // Custom select functionality - Sort dropdown
+    sortBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        sortDropdown.classList.toggle('hidden');
+        sortBtn.classList.toggle('active');
+        
+        // Close language dropdown when opening sort
+        const languageDropdown = document.getElementById('languageDropdown');
+        const languageBtn = document.getElementById('languageBtn');
+        if (languageDropdown && !languageDropdown.classList.contains('hidden')) {
+            languageDropdown.classList.add('hidden');
+            languageBtn.classList.remove('active');
+        }
+    });
+    
+    // Language dropdown
+    const languageBtn = document.getElementById('languageBtn');
+    const languageDropdown = document.getElementById('languageDropdown');
+    
+    if (languageBtn) {
+        languageBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            languageDropdown.classList.toggle('hidden');
+            languageBtn.classList.toggle('active');
+            
+            // Close sort dropdown when opening language
+            if (!sortDropdown.classList.contains('hidden')) {
+                sortDropdown.classList.add('hidden');
+                sortBtn.classList.remove('active');
+            }
+        });
+    }
+    
+    // Close dropdowns on outside click
+    document.addEventListener('click', (e) => {
+        // Close sort dropdown if clicking outside
+        if (!e.target.closest('#sortBtn') && !e.target.closest('#sortDropdown')) {
+            sortDropdown.classList.add('hidden');
+            sortBtn.classList.remove('active');
+        }
+        
+        // Close language dropdown if clicking outside
+        if (!e.target.closest('#languageBtn') && !e.target.closest('#languageDropdown')) {
+            languageDropdown.classList.add('hidden');
+            languageBtn?.classList.remove('active');
+        }
+    });
     
     // Sort options
-    document.querySelectorAll('.sort-dropdown option').forEach(option => {
+    document.querySelectorAll('#sortDropdown option').forEach(option => {
         option.addEventListener('click', (e) => {
             const value = e.target.getAttribute('data-value');
             currentSort = value;
             sortLabel.textContent = e.target.textContent;
             
             // Update active state
-            document.querySelectorAll('.sort-dropdown option').forEach(opt => {
+            document.querySelectorAll('#sortDropdown option').forEach(opt => {
                 opt.classList.remove('active');
             });
             e.target.classList.add('active');
@@ -195,6 +262,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         document.getElementById('overlay').classList.add('hidden');
     });
+    
+    // Help popup functionality
+    const helpLink = document.getElementById('helpLink');
+    const helpPopup = document.getElementById('helpPopup');
+    const helpClose = document.getElementById('helpClose');
+    
+    if (helpLink) {
+        helpLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            showHelp();
+        });
+    }
+    
+    if (helpClose) {
+        helpClose.addEventListener('click', () => {
+            helpPopup.classList.add('hidden');
+        });
+    }
+    
+    if (helpPopup) {
+        helpPopup.addEventListener('click', (e) => {
+            if (e.target === helpPopup) {
+                helpPopup.classList.add('hidden');
+            }
+        });
+    }
 });
 
 function renderShops() {
@@ -249,10 +342,11 @@ async function fetchData() {
 async function fetchWantlist() {
     try {
         // Check cache first
+        const CACHE_KEYS = getCacheKeys(DISCOGS_USERNAME);
         const cached = getCache(CACHE_KEYS.wantlist);
         if (cached) {
             allItems = [...cached];
-            userInfo.textContent = `${DISCOGS_USERNAME} • Wantlist • ${allItems.length} items`;
+            userInfo.textContent = `${DISCOGS_USERNAME} • ${t('wantlist')} • ${allItems.length} ${t('items')}`;
             filteredItems = [...allItems];
             applySort();
             renderWantlist();
@@ -271,7 +365,7 @@ async function fetchWantlist() {
         setCache(CACHE_KEYS.wantlist, allItems);
 
         // Update user info
-        userInfo.textContent = `${DISCOGS_USERNAME} • Wantlist • ${allItems.length} items`;
+        userInfo.textContent = `${DISCOGS_USERNAME} • ${t('wantlist')} • ${allItems.length} ${t('items')}`;
 
         // Apply initial sort and render
         filteredItems = [...allItems];
@@ -280,7 +374,7 @@ async function fetchWantlist() {
 
     } catch (error) {
         console.error('Error:', error);
-        showError(`Error loading wantlist: ${error.message}`);
+        showError(`${t('error_loading_wantlist')} ${error.message}`);
     } finally {
         showLoading(false);
     }
@@ -289,10 +383,11 @@ async function fetchWantlist() {
 async function fetchCollection() {
     try {
         // Check cache first
+        const CACHE_KEYS = getCacheKeys(DISCOGS_USERNAME);
         const cached = getCache(CACHE_KEYS.collection);
         if (cached) {
             allItems = [...cached];
-            userInfo.textContent = `${DISCOGS_USERNAME} • Collection • ${allItems.length} items`;
+            userInfo.textContent = `${DISCOGS_USERNAME} • ${t('collection')} • ${allItems.length} ${t('items')}`;
             filteredItems = [...allItems];
             applySort();
             renderWantlist();
@@ -311,7 +406,7 @@ async function fetchCollection() {
         setCache(CACHE_KEYS.collection, allItems);
 
         // Update user info
-        userInfo.textContent = `${DISCOGS_USERNAME} • Collection • ${allItems.length} items`;
+        userInfo.textContent = `${DISCOGS_USERNAME} • ${t('collection')} • ${allItems.length} ${t('items')}`;
 
         // Apply initial sort and render
         filteredItems = [...allItems];
@@ -320,7 +415,7 @@ async function fetchCollection() {
 
     } catch (error) {
         console.error('Error:', error);
-        showError(`Error loading collection: ${error.message}`);
+        showError(`${t('error_loading_collection')} ${error.message}`);
     } finally {
         showLoading(false);
     }
@@ -407,7 +502,7 @@ function renderWantlist() {
     currentPath === '/wantlist' ? wantlistContainer.classList.add('wantlist-view') : wantlistContainer.classList.remove('wantlist-view');
 
     if (filteredItems.length === 0) {
-        wantlistContainer.innerHTML = '<div class="empty-state"><p>No items found</p></div>';
+        wantlistContainer.innerHTML = `<div class="empty-state"><p>${t('no_items_found')}</p></div>`;
         return;
     }
 
@@ -459,6 +554,11 @@ function ensureCollectionSections() {
         return;
     }
 
+    // Remove old collection sections if they exist
+    document.querySelectorAll('.collection-section-title, .collection-grid').forEach(el => {
+        el.remove();
+    });
+
     const insertAfter = (node, newNode) => {
         node.insertAdjacentElement('afterend', newNode);
         return newNode;
@@ -466,15 +566,15 @@ function ensureCollectionSections() {
 
     let anchor = wantlistContainer;
 
-    const foreign = createCollectionSection('Foreign');
+    const foreign = createCollectionSection(t('foreign'));
     anchor = insertAfter(anchor, foreign.title);
     anchor = insertAfter(anchor, foreign.grid);
     
-    const domestic = createCollectionSection('Domestic');
+    const domestic = createCollectionSection(t('domestic'));
     anchor = insertAfter(anchor, domestic.title);
     anchor = insertAfter(anchor, domestic.grid);
 
-    const uncategorized = createCollectionSection('Uncategorized');
+    const uncategorized = createCollectionSection(t('uncategorized'));
     anchor = insertAfter(anchor, uncategorized.title);
     insertAfter(anchor, uncategorized.grid);
 
@@ -512,12 +612,14 @@ function renderCollectionSection(section, items) {
     section.grid.innerHTML = '';
 
     if (items.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'empty-state';
-        empty.innerHTML = '<p>No items</p>';
-        section.grid.appendChild(empty);
+        section.grid.classList.add('hidden');
+        section.title.classList.add('hidden');
         return;
     }
+
+    section.grid.classList.remove('hidden');
+    section.title.classList.remove('hidden');
+
 
     items.forEach((item, index) => {
         const itemElement = createItemElement(item);
@@ -555,7 +657,7 @@ function createItemElement(item) {
             <h3 class="item-title">${escapeHtml(item.title)}</h3>
             <p class="item-artist">${escapeHtml(item.artist)}${item.year>0 ? ' • ' + item.year : ''}</p>
             <p class="item-notes">${escapeHtml(item.notes)}</p>
-            <a href="${discogsUrl}" target="_blank" class="item-link">View on Discogs →</a>
+            <a href="${discogsUrl}" target="_blank" class="item-link">${t('view_on_discogs')}</a>
         </div>
     `;
     
@@ -617,4 +719,42 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function showHelp() {
+    const helpPopup = document.getElementById('helpPopup');
+    const helpContent = document.getElementById('helpContent');
+    
+    if (!window.LANGUAGES_DATA || !window.LANGUAGES_DATA[CURRENT_LANGUAGE]) {
+        console.error('Language data not available');
+        return;
+    }
+    
+    const helpSections = window.LANGUAGES_DATA[CURRENT_LANGUAGE].help_sections;
+    
+    if (!helpSections) {
+        console.error('Help sections not found for language:', CURRENT_LANGUAGE);
+        return;
+    }
+    
+    helpContent.innerHTML = '';
+    
+    helpSections.forEach(section => {
+        const sectionDiv = document.createElement('div');
+        sectionDiv.className = 'help-section';
+        
+        const title = document.createElement('h3');
+        title.className = 'help-section-title';
+        title.textContent = section.title;
+        
+        const content = document.createElement('div');
+        content.className = 'help-section-content';
+        content.innerHTML = section.content;
+        
+        sectionDiv.appendChild(title);
+        sectionDiv.appendChild(content);
+        helpContent.appendChild(sectionDiv);
+    });
+    
+    helpPopup.classList.remove('hidden');
 }

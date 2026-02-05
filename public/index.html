@@ -18,35 +18,47 @@
         <header>
             <div class="header-top">
                 <nav class="nav-tabs">
-                    <button id="collectionTab" class="nav-tab active" data-path="/collection">Collection</button>
-                    <button id="wantlistTab" class="nav-tab" data-path="/wantlist">Wantlist</button>
+                    <button id="collectionTab" class="nav-tab active" data-path="/collection" data-i18n="collection">Collection</button>
+                    <button id="wantlistTab" class="nav-tab" data-path="/wantlist" data-i18n="wantlist">Wantlist</button>
                 </nav>
+                <div class="language-selector custom-select">
+                    <button class="sort-select" id="languageBtn">
+                        <span id="languageLabel">English</span>
+                        <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </button>
+                    <div class="sort-dropdown hidden" id="languageDropdown">
+                        <!-- Language options dynamically loaded from languages.js -->
+                    </div>
+                </div>
             </div>
             <p class="subtitle" id="userInfo"></p>
         </header>
 
         <div class="controls">
-            <button id="refreshBtn" class="btn-refresh">Refresh</button>
+            <button id="refreshBtn" class="btn-refresh" data-i18n="refresh">Refresh</button>
             <div class="filters">
                 <input 
                     type="text" 
                     id="searchInput" 
                     class="search-box" 
                     placeholder="Search"
+                    data-i18n-placeholder="search"
                 >
                 <div class="custom-select">
                     <button class="sort-select" id="sortBtn">
-                        <span id="sortLabel">Artist (A-Z)</span>
+                        <span id="sortLabel" data-i18n="artist_asc">Artist (A-Z)</span>
                         <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="6 9 12 15 18 9"></polyline>
                         </svg>
                     </button>
                     <div class="sort-dropdown hidden" id="sortDropdown">
-                        <option data-value="artist-asc">Artist (A-Z)</option>
-                        <option data-value="title-asc">Title (A-Z)</option>
-                        <option data-value="title-desc">Title (Z-A)</option>
-                        <option data-value="date-desc">Newest First</option>
-                        <option data-value="date-asc">Oldest First</option>
+                        <option data-value="artist-asc" data-i18n="artist_asc">Artist (A-Z)</option>
+                        <option data-value="title-asc" data-i18n="title_asc">Title (A-Z)</option>
+                        <option data-value="title-desc" data-i18n="title_desc">Title (Z-A)</option>
+                        <option data-value="date-desc" data-i18n="newest_first">Newest First</option>
+                        <option data-value="date-asc" data-i18n="oldest_first">Oldest First</option>
                     </div>
                 </div>
             </div>
@@ -54,13 +66,13 @@
 
         <div id="loadingSpinner" class="loading hidden">
             <div class="spinner"></div>
-            <p>Loading wantlist...</p>
+            <p data-i18n="loading">Loading wantlist...</p>
         </div>
 
         <div id="errorMessage" class="error hidden"></div>
 
         <div id="shopsContainer" class="shops-section hidden">
-            <h2>Vinyl Shops</h2>
+            <h2 data-i18n="vinyl_shops">Vinyl Shops</h2>
             <div id="shopsList" class="shops-list"></div>
         </div>
 
@@ -69,13 +81,30 @@
         </div>
 
         <footer>
-            <p>Data from <a href="https://www.discogs.com" target="_blank">Discogs</a></p>
+            <p>
+                <span data-i18n="data_from">Data from</span> <a href="https://www.discogs.com" target="_blank">Discogs</a>
+                <span class="footer-separator">•</span>
+                <a href="#" id="helpLink" data-i18n="help">Help</a>
+            </p>
         </footer>
     </div>
     <div class="overlay hidden" id="overlay"></div>
 
+    <!-- Help popup -->
+    <div class="help-popup hidden" id="helpPopup">
+        <div class="help-popup-content">
+            <button class="help-close" id="helpClose">&times;</button>
+            <h2 class="help-title" data-i18n="help">Help</h2>
+            <div id="helpContent" class="help-body">
+                <!-- Help content dynamically loaded -->
+            </div>
+        </div>
+    </div>
+
     <!-- keep-awake UI removed -->
 
+    <script src="languages.js"></script>
+    <script src="language-manager.js"></script>
     <script src="config.local.js"></script>
     <script src="app.js"></script>
 </body>
