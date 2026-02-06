@@ -816,6 +816,60 @@ function openNotesPopup() {
 // SVG placeholder as data URI - no external dependencies
 const PLACEHOLDER_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect width="150" height="150" fill="%23404040"/%3E%3Ctext x="50%25" y="50%25" font-family="Arial" font-size="14" fill="%23b3b3b3" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
 
+async function editItemNotes(event, itemId, releaseId, instanceId) {
+    event.stopPropagation();
+    
+    const item = allItems.find(i => i.id === itemId);
+    if (!item || !window.discogsOAuth || !window.discogsOAuth.isAuthenticated) {
+        return;
+    }
+
+    // Reuse the notes popup but with existing notes pre-filled
+    if (!notesPopupElements.popup) {
+        return;
+    }
+
+    if (notesPopupResolve) {
+        closeNotesPopup(null);
+    }
+
+    return new Promise(resolve => {
+        notesPopupResolve = resolve;
+        notesPopupElements.input.value = item.notes || '';
+        notesPopupElements.input.placeholder = t('notes_placeholder') || '';
+        notesPopupElements.confirm.textContent = t('save') || 'Save';
+        notesPopupElements.cancel.textContent = t('cancel') || 'Cancel';
+        notesPopupElements.popup.classList.remove('hidden');
+        notesPopupElements.input.focus();
+
+        // Override the confirm button to save notes instead
+        const originalConfirm = notesPopupElements.confirm.onclick;
+        notesPopupElements.confirm.onclick = async () => {
+            const newNotes = notesPopupElements.input.value.trim();
+            
+            try {
+                // POST to the notes endpoint with the new value
+                await window.discogsOAuth.makeAuthenticatedRequest(
+                    `${DISCOGS_API_BASE}/users/${DISCOGS_USERNAME}/collection/folders/1/releases/${releaseId}/instances/${instanceId}/fields/3`,
+                    { method: 'POST', body: { value: newNotes } }
+                );
+                
+                // Update the item locally
+                item.notes = newNotes;
+                
+                // Re-render to show updated notes
+                applySort();
+                renderWantlist();
+                
+                closeNotesPopup(null);
+                showError(t('notes_saved') || 'Notes saved');
+            } catch (error) {
+                showError(`Error saving notes: ${error.message}`);
+            }
+        };
+    });
+}
+
 async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
     if (!window.discogsOAuth || !window.discogsOAuth.isAuthenticated) {
         showError('You must be logged in with OAuth to move items');
@@ -919,7 +973,12 @@ function createItemElement(item) {
         <div class="item-details">
             <h3 class="item-title">${escapeHtml(item.title)}</h3>
             <p class="item-artist">${escapeHtml(item.artist)}${item.year>0 ? ' • ' + item.year : ''}</p>
-            <p class="item-notes">${escapeHtml(item.notes)}</p>
+            <p class="item-notes-wrapper">
+                <span class="item-notes">${escapeHtml(item.notes)}</span>
+                <button class="item-notes-edit-btn" onclick="editItemNotes(event, ${item.id}, ${item.releaseId}, ${item.instanceId || 'null'})" title="Edit notes">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="svg-icon" style="width: 0.5rem; height: 0.5rem;vertical-align: middle;fill: currentColor;overflow: hidden;" viewBox="0 0 1024 1024" version="1.1"><path d="M671.053824 253.083648c6.05184 3.01056 13.463552 0.52224 16.47616-5.5296l43.646976-87.740416c3.012608-6.05184 0.524288-13.4656-5.527552-16.474112l-112.308224-55.86944c-6.05184-3.01056-13.4656-0.52224-16.47616 5.5296l-43.649024 87.740416c-3.01056 6.05184-0.52224 13.4656 5.527552 16.474112L671.053824 253.083648z"/><path d="M448.755712 719.599616c4.622336-4.931584 10.866688-13.91616 13.877248-19.968l203.35616-408.778752c3.012608-6.05184 0.524288-13.4656-5.527552-16.474112l-112.310272-55.873536c-6.05184-3.01056-13.463552-0.52224-16.47616 5.5296L329.13408 631.177216c-3.01056 6.05184-6.268928 16.474112-7.241728 23.16288l-32.774144 225.294336c-0.9728 6.688768 2.013184 8.126464 6.63552 3.19488L448.755712 719.599616z"/></svg>
+                </button>
+            </p>
             <div class="item-actions">
                 <a href="${discogsUrl}" target="_blank" class="item-link">${t('view_on_discogs')}</a>
                 ${moveButtonHtml}
