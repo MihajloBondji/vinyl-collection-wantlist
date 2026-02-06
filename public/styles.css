@@ -547,6 +547,13 @@ header h1 {
     color: var(--text-secondary);
 }
 
+.item-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: auto;
+}
+
 .item-link {
     display: block;
     color: var(--primary-color);
@@ -554,11 +561,27 @@ header h1 {
     font-weight: 500;
     font-size: 0.9rem;
     transition: var(--transition);
-    margin-top: auto;
 }
 
 .item-link:hover {
     color: var(--primary-color);
+}
+
+.item-move-btn {
+    padding: 0.5rem 1rem;
+    background-color: var(--primary-color);
+    color: var(--dark-bg);
+    border: none;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.item-move-btn:hover {
+    background-color: var(--primary-color-hover);
+    opacity: 0.9;
 }
 
 /* Empty state */

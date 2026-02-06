@@ -28,6 +28,8 @@ window.LANGUAGES_DATA = {
     "confirm_logout": "Are you sure you want to logout?",
     "login_required": "Please login to view your collection.",
     "enter_username": "Please add ?username=YOUR_USERNAME to the URL or login with OAuth.",
+    "add_to_collection": "Add to Collection",
+    "move_to_wantlist": "Move to Wantlist",
     "help_sections": [
       {
         "title": "Setting Categories",
@@ -71,6 +73,8 @@ window.LANGUAGES_DATA = {
     "confirm_logout": "Да ли сте сигурни да желите да се одјавите?",
     "login_required": "Молимо пријавите се да видите вашу колекцију.",
     "enter_username": "Молимо додајте ?username=ВАШЕ_КОРИСНИЧКО_ИМЕ URL-у или се пријавите са OAuth.",
+    "add_to_collection": "Додај у колекцију",
+    "move_to_wantlist": "Премести у листу жеља",
     "help_sections": [
       {
         "title": "Подешавање категорија",
@@ -108,6 +112,8 @@ window.LANGUAGES_DATA = {
     "login": "Prijavi se sa Discogs",
     "logout": "Odjavi se",
     "confirm_logout": "Da li ste sigurni da želite da se odjavite?",
+    "add_to_collection": "Dodaj u kolekciju",
+    "move_to_wantlist": "Premesti u listu želja",
     "login_required": "Molimo prijavite se da vidite vašu kolekciju.",
     "enter_username": "Molimo dodajte ?username=VAŠE_KORISNIČKO_IME URL-u ili se prijavite sa OAuth.",
     "help_sections": [
@@ -144,11 +150,8 @@ window.LANGUAGES_DATA = {
     "confirm_logout": "ログアウトしてもよろしいですか？",
     "login_required": "コレクションを表示するにはログインしてください。",
     "enter_username": "URLに?username=YOUR_USERNAMEを追加するか、OAuthでログインしてください。",
-    "error_loading_collection": "コレクションの読み込みエラー:",
-    "foreign": "海外",
-    "domestic": "国内",
-    "uncategorized": "未分類",
-    "help": "ヘルプ",
+    "add_to_collection": "コレクションに追加",
+    "move_to_wantlist": "ウィッシュリストに移動",
     "help_sections": [
       {
         "title": "カテゴリ設定",
@@ -183,6 +186,8 @@ window.LANGUAGES_DATA = {
     "confirm_logout": "Sind Sie sicher, dass Sie sich abmelden möchten?",
     "login_required": "Bitte melden Sie sich an, um Ihre Kollektion anzuzeigen.",
     "enter_username": "Bitte fügen Sie ?username=IHR_BENUTZERNAME zur URL hinzu oder melden Sie sich mit OAuth an.",
+    "add_to_collection": "Zur Kollektion hinzufügen",
+    "move_to_wantlist": "Zur Wunschliste verschieben",
     "error_loading_collection": "Fehler beim Laden der Kollektion:",
     "foreign": "Ausland",
     "domestic": "Inland",
@@ -215,6 +220,8 @@ window.LANGUAGES_DATA = {
     "login": "Connectez-vous avec Discogs",
     "logout": "Déconnexion",
     "confirm_logout": "Êtes-vous sûr de vouloir vous déconnecter?",
+    "add_to_collection": "Ajouter à la collection",
+    "move_to_wantlist": "Déplacer vers la liste de souhaits",
     "login_required": "Veuillez vous connecter pour afficher votre collection.",
     "enter_username": "Veuillez ajouter ?username=VOTRE_NOM_D_UTILISATEUR à l'URL ou vous connecter avec OAuth.",
     "vinyl_shops": "Magasins de vinyle",
@@ -254,6 +261,8 @@ window.LANGUAGES_DATA = {
     "login": "Iniciar sesión con Discogs",
     "logout": "Cerrar sesión",
     "confirm_logout": "¿Está seguro de que desea cerrar sesión?",
+    "add_to_collection": "Añadir a la colección",
+    "move_to_wantlist": "Mover a la lista de deseos",
     "login_required": "Por favor inicie sesión para ver su colección.",
     "enter_username": "Por favor agregue ?username=SU_NOMBRE_DE_USUARIO a la URL o inicie sesión con OAuth.",
     "vinyl_shops": "Tiendas de vinilo",
@@ -291,6 +300,8 @@ window.LANGUAGES_DATA = {
     "loading": "Загрузка...",
     "no_items_found": "Элементы не найдены",
     "login": "Войти через Discogs",
+    "add_to_collection": "Добавить в коллекцию",
+    "move_to_wantlist": "Переместить в список желаний",
     "logout": "Выход",
     "confirm_logout": "Вы уверены, что хотите выйти?",
     "login_required": "Пожалуйста, войдите, чтобы просмотреть вашу коллекцию.",

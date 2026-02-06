@@ -742,11 +742,60 @@ function renderCollectionSection(section, items) {
 // SVG placeholder as data URI - no external dependencies
 const PLACEHOLDER_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect width="150" height="150" fill="%23404040"/%3E%3Ctext x="50%25" y="50%25" font-family="Arial" font-size="14" fill="%23b3b3b3" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
 
+async function moveItem(itemId, fromPath, toPath) {
+    if (!window.discogsOAuth || !window.discogsOAuth.isAuthenticated) {
+        showError('You must be logged in with OAuth to move items');
+        return;
+    }
+
+    try {
+        showLoading(true);
+        hideError();
+
+        const username = DISCOGS_USERNAME;
+
+        if (fromPath === '/collection' && toPath === '/wantlist') {
+            // Remove from collection, add to wantlist
+            await window.discogsOAuth.makeAuthenticatedRequest(
+                `${DISCOGS_API_BASE}/users/${username}/collection/folders/0/releases/${itemId}`,
+                { method: 'DELETE' }
+            );
+            await window.discogsOAuth.makeAuthenticatedRequest(
+                `${DISCOGS_API_BASE}/users/${username}/wants/${itemId}`,
+                { method: 'POST' }
+            );
+        } else if (fromPath === '/wantlist' && toPath === '/collection') {
+            // Remove from wantlist, add to collection
+            await window.discogsOAuth.makeAuthenticatedRequest(
+                `${DISCOGS_API_BASE}/users/${username}/wants/${itemId}`,
+                { method: 'DELETE' }
+            );
+            await window.discogsOAuth.makeAuthenticatedRequest(
+                `${DISCOGS_API_BASE}/users/${username}/collection/folders/0/releases/${itemId}`,
+                { method: 'POST' }
+            );
+        }
+
+        // Clear cache and refresh
+        const CACHE_KEYS = getCacheKeys(DISCOGS_USERNAME);
+        clearCache(CACHE_KEYS.wantlist);
+        clearCache(CACHE_KEYS.collection);
+
+        showLoading(false);
+        fetchData();
+    } catch (error) {
+        showLoading(false);
+        console.error('Error moving item:', error);
+        showError(`Error moving item: ${error.message}`);
+    }
+}
+
 function createItemElement(item) {
     const div = document.createElement('div');
     div.className = 'wantlist-item';
     
     const discogsUrl = `https://www.discogs.com/release/${item.id}`;
+    const isAuthenticated = window.discogsOAuth && window.discogsOAuth.isAuthenticated;
     
     let imageHtml = '';
     if (item.thumb) {
@@ -756,13 +805,23 @@ function createItemElement(item) {
         </div>`;
     }
     
+    let moveButtonHtml = '';
+    if (isAuthenticated) {
+        const moveText = currentPath === '/wantlist' ? t('add_to_collection') || 'Add to Collection' : t('move_to_wantlist') || 'Move to Wantlist';
+        const targetPath = currentPath === '/wantlist' ? '/collection' : '/wantlist';
+        moveButtonHtml = `<button class="item-move-btn" onclick="moveItem(${item.id}, '${currentPath}', '${targetPath}')">${moveText}</button>`;
+    }
+    
     div.innerHTML = `
         ${imageHtml}
         <div class="item-details">
             <h3 class="item-title">${escapeHtml(item.title)}</h3>
             <p class="item-artist">${escapeHtml(item.artist)}${item.year>0 ? ' • ' + item.year : ''}</p>
             <p class="item-notes">${escapeHtml(item.notes)}</p>
-            <a href="${discogsUrl}" target="_blank" class="item-link">${t('view_on_discogs')}</a>
+            <div class="item-actions">
+                <a href="${discogsUrl}" target="_blank" class="item-link">${t('view_on_discogs')}</a>
+                ${moveButtonHtml}
+            </div>
         </div>
     `;
     
