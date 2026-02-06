@@ -858,31 +858,16 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
                 `${DISCOGS_API_BASE}/users/${username}/wants/${releaseId}`,
                 { method: 'DELETE' }
             );
-            // Add to collection (POST to folder with release_id)
+            // Add to collection with notes (POST to folder with release_id and optional notes)
+            const addBody = notes ? { notes: [{ field_id: 3, value: notes }] } : {};
             const addResponse = await window.discogsOAuth.makeAuthenticatedRequest(
                 `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}`,
-                { method: 'POST' }
+                { method: 'POST', body: addBody }
             );
+            console.log('Add to collection response:', addResponse);
 
             const newInstanceId = addResponse?.instance_id || addResponse?.instanceId;
-            if (notes && newInstanceId) {
-                // Set notes on the instance - use the array format with field_id: 3
-                console.log('Setting notes:', {
-                    releaseId,
-                    newInstanceId,
-                    notes,
-                    url: `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}`,
-                    body: { notes: [{ field_id: 3, value: notes }] }
-                });
-                const notesResponse = await window.discogsOAuth.makeAuthenticatedRequest(
-                    `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}`,
-                    { 
-                        method: 'POST', 
-                        body: { notes: [{ field_id: 3, value: notes }] }
-                    }
-                );
-                console.log('Notes API response:', notesResponse);
-            }
+            console.log('Item added with instance_id:', newInstanceId);
         }
 
         // Clear cache and refresh
