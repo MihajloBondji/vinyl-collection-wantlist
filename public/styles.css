@@ -451,6 +451,7 @@ header h1 {
     flex-direction: column;
     overflow: hidden;
     transition: var(--transition);
+    left: 0;
 }
 
 .list-grid:not(.wantlist-view) .wantlist-item {
