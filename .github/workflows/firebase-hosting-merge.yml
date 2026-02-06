@@ -7,11 +7,28 @@ on:
     branches:
       - main
 jobs:
-  deploy_frontend:
+  check-changes:
     runs-on: ubuntu-latest
-    if: |
-      contains(github.event.head_commit.modified, 'public/') ||
-      contains(github.event.head_commit.modified, 'firebase.json')
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v1
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'public/**'
+              - 'firebase.json'
+            backend:
+              - 'functions/**'
+              - 'fly.toml'
+
+  deploy_frontend:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.frontend == 'true' }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: FirebaseExtended/action-hosting-deploy@v0
@@ -22,10 +39,9 @@ jobs:
           projectId: vinyl-collection-wantlist
 
   deploy_backend:
+    needs: check-changes
+    if: ${{ needs.check-changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
-    if: |
-      contains(github.event.head_commit.modified, 'functions/') ||
-      contains(github.event.head_commit.modified, 'fly.toml')
     steps:
       - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
