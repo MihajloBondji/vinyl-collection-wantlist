@@ -9,6 +9,9 @@ on:
 jobs:
   deploy_frontend:
     runs-on: ubuntu-latest
+    if: |
+      contains(github.event.head_commit.modified, 'public/') ||
+      contains(github.event.head_commit.modified, 'firebase.json')
     steps:
       - uses: actions/checkout@v4
       - uses: FirebaseExtended/action-hosting-deploy@v0
@@ -20,6 +23,9 @@ jobs:
 
   deploy_backend:
     runs-on: ubuntu-latest
+    if: |
+      contains(github.event.head_commit.modified, 'functions/') ||
+      contains(github.event.head_commit.modified, 'fly.toml')
     steps:
       - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
