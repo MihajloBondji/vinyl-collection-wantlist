@@ -1,10 +1,11 @@
-// OAuth Authentication Manager for Discogs API (Cloud Functions Version)
-// Uses Firebase Cloud Functions to securely handle OAuth flow
+// OAuth Authentication Manager for Discogs API (Express Backend Version)
+// Uses Express backend to securely handle OAuth flow
 // Consumer Secret is never exposed to the browser
 
 class DiscogsOAuth {
     constructor() {
         this.AUTHORIZE_URL = 'https://www.discogs.com/oauth/authorize';
+        this.BACKEND_URL = this.getBackendUrl();
         
         // Storage keys
         this.STORAGE_KEYS = {
@@ -20,40 +21,31 @@ class DiscogsOAuth {
         this.accessToken = null;
         this.accessTokenSecret = null;
         
-        // Firebase functions (will be set when available)
-        this.functions = null;
-        
         this.init();
     }
     
+    getBackendUrl() {
+        // For production, set BACKEND_URL environment variable
+        // For local dev, use localhost:3000
+        if (typeof window !== 'undefined' && window.BACKEND_URL) {
+            return window.BACKEND_URL;
+        }
+        const host = location.hostname;
+        if (host === 'localhost' || host === '127.0.0.1') {
+            return 'http://localhost:3000';
+        }
+        // Production: replace with your Fly.io URL
+        return 'https://vinyl-collection-backend.fly.dev';
+    }
+    
     init() {
-        // Wait for Firebase to be initialized
-        setTimeout(() => {
-            if (typeof firebase !== 'undefined' && firebase.functions) {
-                const functions = firebase.functions();
-
-                // Ensure emulator is used for local/private IP hosts
-                const host = location.hostname;
-                const isLocalHost = host === 'localhost' || host === '127.0.0.1';
-                const isPrivateIP = host.startsWith('192.168.') || host.startsWith('10.') || host.startsWith('172.');
-
-                if (isLocalHost || isPrivateIP) {
-                    functions.useEmulator('localhost', 5001);
-                    console.log('OAuth: Using local emulator');
-                }
-
-                this.functions = functions;
-                console.log('OAuth: Firebase functions initialized');
-            } else {
-                console.warn('OAuth: Firebase functions not available');
-            }
-        }, 100);
-        
         // Check if we have stored credentials
         this.loadStoredCredentials();
         
         // Check if we're returning from OAuth callback
         this.handleOAuthCallback();
+        
+        console.log('OAuth: Initialized, backend:', this.BACKEND_URL);
     }
     
     loadStoredCredentials() {
@@ -89,7 +81,7 @@ class DiscogsOAuth {
             }
             
             try {
-                // Exchange for access token via Cloud Function
+                // Exchange for access token via backend
                 await this.getAccessToken(oauthToken, requestTokenSecret, oauthVerifier);
                 
                 // Clean up URL parameters
@@ -119,22 +111,24 @@ class DiscogsOAuth {
     }
     
     async startOAuthFlow() {
-        if (!this.functions) {
-            this.showError('Firebase is not ready. Please try again in a moment.');
-            return;
-        }
-        
         try {
             console.log('OAuth: Starting authentication flow...');
             
             // Get callback URL
             const callbackUrl = window.location.origin + window.location.pathname;
             
-            // Call Cloud Function to get request token
-            const getRequestToken = this.functions.httpsCallable('getOAuthRequestToken');
-            const result = await getRequestToken({ callbackUrl });
+            // Call backend to get request token
+            const response = await fetch(`${this.BACKEND_URL}/oauth/request-token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ callbackUrl })
+            });
             
-            const requestTokenData = result.data;
+            if (!response.ok) {
+                throw new Error('Failed to get request token');
+            }
+            
+            const requestTokenData = await response.json();
             
             // Store request token and secret
             localStorage.setItem(this.STORAGE_KEYS.requestToken, requestTokenData.oauth_token);
@@ -150,18 +144,21 @@ class DiscogsOAuth {
     }
     
     async getAccessToken(oauthToken, oauthTokenSecret, oauthVerifier) {
-        if (!this.functions) {
-            throw new Error('Firebase functions not available');
-        }
-        
-        const exchangeToken = this.functions.httpsCallable('exchangeOAuthToken');
-        const result = await exchangeToken({
-            oauth_token: oauthToken,
-            oauth_token_secret: oauthTokenSecret,
-            oauth_verifier: oauthVerifier
+        const response = await fetch(`${this.BACKEND_URL}/oauth/access-token`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                oauth_token: oauthToken,
+                oauth_token_secret: oauthTokenSecret,
+                oauth_verifier: oauthVerifier
+            })
         });
         
-        const tokenData = result.data;
+        if (!response.ok) {
+            throw new Error('Token exchange failed');
+        }
+        
+        const tokenData = await response.json();
         
         // Store access token credentials
         this.accessToken = tokenData.oauth_token;
@@ -176,18 +173,25 @@ class DiscogsOAuth {
     }
     
     async verifyAuthentication() {
-        if (!this.isAuthenticated || !this.functions) {
+        if (!this.isAuthenticated) {
             return false;
         }
         
         try {
-            const verifyToken = this.functions.httpsCallable('verifyOAuthToken');
-            const result = await verifyToken({
-                oauth_token: this.accessToken,
-                oauth_token_secret: this.accessTokenSecret
+            const response = await fetch(`${this.BACKEND_URL}/oauth/verify`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    oauth_token: this.accessToken,
+                    oauth_token_secret: this.accessTokenSecret
+                })
             });
             
-            const identityData = result.data;
+            if (!response.ok) {
+                throw new Error('Verification failed');
+            }
+            
+            const identityData = await response.json();
             this.username = identityData.username;
             localStorage.setItem(this.STORAGE_KEYS.username, this.username);
             
@@ -207,21 +211,28 @@ class DiscogsOAuth {
     }
     
     async makeAuthenticatedRequest(url, options = {}) {
-        if (!this.isAuthenticated || !this.functions) {
+        if (!this.isAuthenticated) {
             throw new Error('Not authenticated');
         }
         
         try {
-            const makeRequest = this.functions.httpsCallable('makeAuthenticatedRequest');
-            const result = await makeRequest({
-                url: url,
-                method: options.method || 'GET',
-                body: options.body,
-                oauth_token: this.accessToken,
-                oauth_token_secret: this.accessTokenSecret
+            const response = await fetch(`${this.BACKEND_URL}/api/request`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    url: url,
+                    method: options.method || 'GET',
+                    body: options.body,
+                    oauth_token: this.accessToken,
+                    oauth_token_secret: this.accessTokenSecret
+                })
             });
             
-            return result.data;
+            if (!response.ok) {
+                throw new Error('Request failed');
+            }
+            
+            return await response.json();
         } catch (error) {
             console.error('OAuth: Request error:', error);
             throw error;
@@ -234,7 +245,6 @@ class DiscogsOAuth {
         localStorage.removeItem(this.STORAGE_KEYS.accessTokenSecret);
         localStorage.removeItem(this.STORAGE_KEYS.username);
         
-        // Reset state
         this.isAuthenticated = false;
         this.username = null;
         this.accessToken = null;
@@ -242,27 +252,16 @@ class DiscogsOAuth {
         
         console.log('OAuth: Logged out');
         
-        // Trigger custom event for app to update UI
+        // Trigger custom event
         window.dispatchEvent(new CustomEvent('oauth-logout'));
-        
-        // Reload page to reset app state
-        window.location.href = window.location.pathname;
     }
     
     showError(message) {
-        // This will be handled by the main app's error display
-        window.dispatchEvent(new CustomEvent('oauth-error', {
-            detail: { message }
-        }));
-    }
-    
-    getAuthData() {
-        return {
-            isAuthenticated: this.isAuthenticated,
-            username: this.username,
-            token: this.accessToken,
-            tokenSecret: this.accessTokenSecret
-        };
+        const errorElement = document.getElementById('errorMessage');
+        if (errorElement) {
+            errorElement.textContent = message;
+            errorElement.classList.remove('hidden');
+        }
     }
 }
 

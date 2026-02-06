@@ -7,24 +7,24 @@ on:
     branches:
       - main
 jobs:
-  build_and_deploy:
+  deploy_frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install Firebase CLI
-        run: npm install -g firebase-tools
-      - name: Write Firebase service account
-        run: |
-          cat <<'EOF' > "$RUNNER_TEMP/firebase.json"
-          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_VINYL_COLLECTION_WANTLIST }}
-          EOF
-      - name: Deploy Cloud Functions
-        env:
-          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase.json
-        run: firebase deploy --only functions --project vinyl-collection-wantlist
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_VINYL_COLLECTION_WANTLIST }}
           channelId: live
           projectId: vinyl-collection-wantlist
+
+  deploy_backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy Backend to Fly.io
+        run: |
+          curl -L https://fly.io/install.sh | sh
+          flyctl deploy -a vinyl-collection-backend
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

@@ -1,15 +1,18 @@
-{
-  "name": "vinyl-collection-functions",
-  "description": "Firebase Cloud Functions for Vinyl Collection OAuth",
+﻿{
+  "name": "vinyl-collection-backend",
+  "description": "Vinyl Collection OAuth Backend",
   "version": "1.0.0",
   "engines": {
     "node": "20"
   },
-  "main": "index.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
   "dependencies": {
     "dotenv": "^17.2.4",
-    "firebase-admin": "^11.0.0",
-    "firebase-functions": "^4.0.0",
+    "express": "^4.18.2",
     "node-fetch": "^2.6.11"
   }
 }

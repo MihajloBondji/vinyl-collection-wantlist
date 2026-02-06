@@ -18,34 +18,46 @@ A beautiful, responsive web application for viewing and managing your Discogs vi
 
 ## 🚀 Quick Start
 
-### Option 1: OAuth with Cloud Functions (Most Secure - Recommended)
+**Get started in 5 minutes → [QUICKSTART.md](QUICKSTART.md)**
 
-1. **Setup Firebase Cloud Functions** (keeps your Consumer Secret safe):
-   - Follow the [Cloud Functions Setup Guide](CLOUD_FUNCTIONS_SETUP.md)
-   - Takes ~5-10 minutes
-   - Your Consumer Secret never touches the browser
+### Setup Overview
 
-2. **Configure Firebase in your app**:
-   - Update `public/firebase-config.js` with your Firebase project settings
+This app uses:
+- **Frontend**: Static HTML/JS (runs in browser)
+- **Backend**: Express.js OAuth server (keeps your Consumer Secret safe)
+- **Hosting**: Firebase Hosting (frontend) + Fly.io (backend)
 
-3. **Deploy**:
-   ```bash
-   firebase deploy
-   ```
+### Option 1: Local Testing
 
-**Why this is better:**
-- ✅ Completely secure - Consumer Secret stays on Firebase
+```bash
+cd functions
+npm install
+npm start
+# Backend runs on localhost:3000
+
+# In another terminal:
+npx http-server public --port 8080
+# Visit http://localhost:8080
+```
+
+### Option 2: Deploy to Production
+
+1. Deploy backend to Fly.io: `flyctl deploy -a vinyl-collection-backend`
+2. Deploy frontend to Firebase Hosting: `firebase deploy --only hosting`
+3. See [DEPLOY.md](DEPLOY.md) for full instructions
+
+**Why this setup is secure:**
+- ✅ Consumer Secret never exposed to browser
 - ✅ Safe to push to public GitHub
-- ✅ Professional OAuth implementation
-- ✅ Free Firebase tier easily covers your needs
+- ✅ Professional OAuth 1.0a implementation
+- ✅ Free tier covers all your needs
 
-### Option 2: OAuth Login (Simpler, Less Secure)
+## 📚 Documentation
 
-For local testing or private projects - follow [OAuth Setup Guide](OAUTH_SETUP.md)
-
-### Option 3: URL Parameters (Legacy Method)
-
-Navigate to: `?username=YOUR_DISCOGS_USERNAME&token=YOUR_TOKEN`
+- **[QUICKSTART.md](QUICKSTART.md)** - Get running in 5 minutes
+- **[DEPLOY.md](DEPLOY.md)** - Full deployment guide
+- **[MIGRATION.md](MIGRATION.md)** - What changed from Firebase
+- **Previous Docs** - See below
 
 ## 🎯 Usage Guide
 
