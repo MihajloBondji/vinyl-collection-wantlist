@@ -867,6 +867,13 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
             const newInstanceId = addResponse?.instance_id || addResponse?.instanceId;
             if (notes && newInstanceId) {
                 // Set notes on the instance
+                console.log('Setting notes:', {
+                    releaseId,
+                    newInstanceId,
+                    notes,
+                    url: `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}`,
+                    body: { notes: notes }
+                });
                 const notesResponse = await window.discogsOAuth.makeAuthenticatedRequest(
                     `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}`,
                     { 

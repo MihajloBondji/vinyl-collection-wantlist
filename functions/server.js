@@ -223,7 +223,15 @@ app.post('/api/request', async (req, res) => {
             fetchOptions.headers['Content-Type'] = 'application/json';
         }
 
+        console.log('Discogs API Request:', {
+            url,
+            method,
+            body: JSON.stringify(body)
+        });
+
         const response = await fetch(url, fetchOptions);
+        
+        console.log('Discogs API Response Status:', response.status);
         
         // For DELETE requests, Discogs returns 204 No Content on success
         if (response.status === 204) {
@@ -231,6 +239,8 @@ app.post('/api/request', async (req, res) => {
         }
         
         const data = await response.json();
+        
+        console.log('Discogs API Response Data:', data);
 
         if (!response.ok) {
             return res.status(response.status).json({ error: 'Request failed', data });
