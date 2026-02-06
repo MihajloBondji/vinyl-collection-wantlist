@@ -867,7 +867,7 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
             if (notes && newInstanceId) {
                 await window.discogsOAuth.makeAuthenticatedRequest(
                     `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}`,
-                    { method: 'POST', body: { fields: [{ field_id: 3, value: notes }] } }
+                    { method: 'POST', body: { notes: [{ field_id: 3, value: notes }] } }
                 );
             }
         }
