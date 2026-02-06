@@ -22,9 +22,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
       - name: Deploy Backend to Fly.io
-        run: |
-          curl -L https://fly.io/install.sh | sh
-          flyctl deploy -a vinyl-collection-backend
+        run: flyctl deploy -a vinyl-collection-backend
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
