@@ -196,6 +196,7 @@ app.post('/oauth/verify', async (req, res) => {
 
 // POST /api/request
 app.post('/api/request', async (req, res) => {
+    console.log('[API] POST /api/request received');
     try {
         const { url, method, oauth_token, oauth_token_secret, body } = req.body;
 
