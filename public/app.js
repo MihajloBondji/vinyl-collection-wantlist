@@ -858,16 +858,35 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
                 `${DISCOGS_API_BASE}/users/${username}/wants/${releaseId}`,
                 { method: 'DELETE' }
             );
-            // Add to collection with notes (POST to folder with release_id and optional notes)
-            const addBody = notes ? { notes: [{ field_id: 3, value: notes }] } : {};
+            // Add to collection (POST to folder with release_id)
             const addResponse = await window.discogsOAuth.makeAuthenticatedRequest(
                 `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}`,
-                { method: 'POST', body: addBody }
+                { method: 'POST' }
             );
             console.log('Add to collection response:', addResponse);
 
+            // If notes provided, update the instance notes
             const newInstanceId = addResponse?.instance_id || addResponse?.instanceId;
-            console.log('Item added with instance_id:', newInstanceId);
+            if (notes && newInstanceId) {
+                console.log('Setting notes on instance:', {
+                    instanceId: newInstanceId,
+                    notes: notes,
+                    payload: { value: notes }
+                });
+                try {
+                    const notesResponse = await window.discogsOAuth.makeAuthenticatedRequest(
+                        `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}`,
+                        { 
+                            method: 'POST', 
+                            body: { value: notes }
+                        }
+                    );
+                    console.log('Notes update response:', notesResponse);
+                } catch (notesError) {
+                    console.error('Error setting notes:', notesError);
+                    // Don't fail the entire move if notes fail
+                }
+            }
         }
 
         // Clear cache and refresh
