@@ -11,6 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+      - name: Write Firebase service account
+        run: |
+          cat <<'EOF' > "$RUNNER_TEMP/firebase.json"
+          ${{ secrets.FIREBASE_SERVICE_ACCOUNT_VINYL_COLLECTION_WANTLIST }}
+          EOF
+      - name: Deploy Cloud Functions
+        env:
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase.json
+        run: firebase deploy --only functions --project vinyl-collection-wantlist
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
