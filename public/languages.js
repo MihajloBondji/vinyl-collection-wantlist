@@ -34,6 +34,8 @@ window.LANGUAGES_DATA = {
     "notes_label": "Notes (optional)",
     "notes_placeholder": "e.g., D- Great condition, original pressing",
     "cancel": "Cancel",
+    "save": "Save",
+    "notes_saved": "Notes saved",
     "help_sections": [
       {
         "title": "Setting Categories",
@@ -83,6 +85,8 @@ window.LANGUAGES_DATA = {
     "notes_label": "Белешке (опционо)",
     "notes_placeholder": "нпр. D- Одлично стање, оригинално издање",
     "cancel": "Откажи",
+    "save": "Сачувај",
+    "notes_saved": "Белешке сачуване",
     "help_sections": [
       {
         "title": "Подешавање категорија",
@@ -128,6 +132,8 @@ window.LANGUAGES_DATA = {
     "notes_label": "Beleške (opciono)",
     "notes_placeholder": "npr. D- Odlično stanje, originalno izdanje",
     "cancel": "Otkaži",
+    "save": "Sačuvaj",
+    "notes_saved": "Beleške sačuvane",
     "help_sections": [
       {
         "title": "Podešavanje kategorija",
@@ -208,6 +214,8 @@ window.LANGUAGES_DATA = {
     "notes_label": "Notizen (optional)",
     "notes_placeholder": "z. B. D- Sehr guter Zustand, Originalpressung",
     "cancel": "Abbrechen",
+    "save": "Speichern",
+    "notes_saved": "Notizen gespeichert",
     "error_loading_collection": "Fehler beim Laden der Kollektion:",
     "foreign": "Ausland",
     "domestic": "Inland",
@@ -246,6 +254,8 @@ window.LANGUAGES_DATA = {
     "notes_label": "Notes (facultatif)",
     "notes_placeholder": "ex. D- Très bon état, pressage original",
     "cancel": "Annuler",
+    "save": "Enregistrer",
+    "notes_saved": "Notes enregistrées",
     "login_required": "Veuillez vous connecter pour afficher votre collection.",
     "enter_username": "Veuillez ajouter ?username=VOTRE_NOM_D_UTILISATEUR à l'URL ou vous connecter avec OAuth.",
     "vinyl_shops": "Magasins de vinyle",
@@ -291,6 +301,8 @@ window.LANGUAGES_DATA = {
     "notes_label": "Notas (opcional)",
     "notes_placeholder": "ej.: D- Excelente estado, primera edición",
     "cancel": "Cancelar",
+    "save": "Guardar",
+    "notes_saved": "Notas guardadas",
     "login_required": "Por favor inicie sesión para ver su colección.",
     "enter_username": "Por favor agregue ?username=SU_NOMBRE_DE_USUARIO a la URL o inicie sesión con OAuth.",
     "vinyl_shops": "Tiendas de vinilo",
@@ -334,6 +346,8 @@ window.LANGUAGES_DATA = {
     "notes_label": "Заметки (необязательно)",
     "notes_placeholder": "например: D- Отличное состояние, оригинальный пресс",
     "cancel": "Отмена",
+    "save": "Сохранить",
+    "notes_saved": "Примечания сохранены",
     "logout": "Выход",
     "confirm_logout": "Вы уверены, что хотите выйти?",
     "login_required": "Пожалуйста, войдите, чтобы просмотреть вашу коллекцию.",
