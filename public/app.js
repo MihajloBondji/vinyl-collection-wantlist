@@ -63,6 +63,14 @@ let filteredItems = [];
 let currentSort = 'artist-asc';
 let currentPath = '/collection';
 let searchTimeout;
+let notesPopupResolve = null;
+let notesPopupElements = {
+    popup: null,
+    input: null,
+    confirm: null,
+    cancel: null,
+    close: null
+};
 
 // Vinyl shops - add your shops here
 const VINYL_SHOPS = [
@@ -329,6 +337,37 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
         document.getElementById('overlay').classList.add('hidden');
     });
+
+    const notesPopup = document.getElementById('notesPopup');
+    const notesInput = document.getElementById('notesInput');
+    const notesClose = document.getElementById('notesClose');
+    const notesCancel = document.getElementById('notesCancel');
+    const notesConfirm = document.getElementById('notesConfirm');
+
+    if (notesPopup && notesInput && notesClose && notesCancel && notesConfirm) {
+        notesPopupElements = {
+            popup: notesPopup,
+            input: notesInput,
+            confirm: notesConfirm,
+            cancel: notesCancel,
+            close: notesClose
+        };
+
+        notesClose.addEventListener('click', () => closeNotesPopup(null));
+        notesCancel.addEventListener('click', () => closeNotesPopup(null));
+        notesConfirm.addEventListener('click', () => closeNotesPopup(notesInput.value.trim()));
+        notesPopup.addEventListener('click', (e) => {
+            if (e.target === notesPopup) {
+                closeNotesPopup(null);
+            }
+        });
+
+        notesInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+                closeNotesPopup(notesInput.value.trim());
+            }
+        });
+    }
     
     // Help popup functionality
     const helpLink = document.getElementById('helpLink');
@@ -743,6 +782,40 @@ function renderCollectionSection(section, items) {
     });
 }
 
+function closeNotesPopup(value) {
+    if (!notesPopupElements.popup) {
+        return;
+    }
+
+    notesPopupElements.popup.classList.add('hidden');
+
+    if (notesPopupResolve) {
+        const resolve = notesPopupResolve;
+        notesPopupResolve = null;
+        resolve(value);
+    }
+}
+
+function openNotesPopup() {
+    if (!notesPopupElements.popup) {
+        return Promise.resolve(null);
+    }
+
+    if (notesPopupResolve) {
+        closeNotesPopup(null);
+    }
+
+    return new Promise(resolve => {
+        notesPopupResolve = resolve;
+        notesPopupElements.input.value = '';
+        notesPopupElements.input.placeholder = t('notes_placeholder') || '';
+        notesPopupElements.confirm.textContent = t('add_to_collection') || 'Add to Collection';
+        notesPopupElements.cancel.textContent = t('cancel') || 'Cancel';
+        notesPopupElements.popup.classList.remove('hidden');
+        notesPopupElements.input.focus();
+    });
+}
+
 // SVG placeholder as data URI - no external dependencies
 const PLACEHOLDER_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect width="150" height="150" fill="%23404040"/%3E%3Ctext x="50%25" y="50%25" font-family="Arial" font-size="14" fill="%23b3b3b3" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
 
@@ -750,6 +823,15 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
     if (!window.discogsOAuth || !window.discogsOAuth.isAuthenticated) {
         showError('You must be logged in with OAuth to move items');
         return;
+    }
+
+    let notes = '';
+    if (fromPath === '/wantlist' && toPath === '/collection') {
+        const noteResult = await openNotesPopup();
+        if (noteResult === null) {
+            return;
+        }
+        notes = noteResult;
     }
 
     try {
@@ -776,10 +858,18 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
                 { method: 'DELETE' }
             );
             // Add to collection (POST to folder with release_id)
-            await window.discogsOAuth.makeAuthenticatedRequest(
+            const addResponse = await window.discogsOAuth.makeAuthenticatedRequest(
                 `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}`,
                 { method: 'POST' }
             );
+
+            const newInstanceId = addResponse?.instance_id || addResponse?.instanceId;
+            if (notes && newInstanceId) {
+                await window.discogsOAuth.makeAuthenticatedRequest(
+                    `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}`,
+                    { method: 'POST', body: { fields: [{ field_id: 3, value: notes }] } }
+                );
+            }
         }
 
         // Clear cache and refresh
@@ -787,6 +877,7 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
         clearCache(CACHE_KEYS.wantlist);
         clearCache(CACHE_KEYS.collection);
 
+        overlay.classList.add('hidden');
         showLoading(false);
         fetchData();
     } catch (error) {

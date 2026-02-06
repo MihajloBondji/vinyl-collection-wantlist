@@ -105,6 +105,20 @@
         </div>
     </div>
 
+    <!-- Notes popup -->
+    <div class="notes-popup hidden" id="notesPopup">
+        <div class="notes-popup-content">
+            <button class="notes-close" id="notesClose">&times;</button>
+            <h2 class="notes-title" data-i18n="add_notes_title">Add notes</h2>
+            <label class="notes-label" for="notesInput" data-i18n="notes_label">Notes (optional)</label>
+            <textarea id="notesInput" class="notes-input" rows="3"></textarea>
+            <div class="notes-actions">
+                <button class="notes-cancel btn-secondary" id="notesCancel" data-i18n="cancel">Cancel</button>
+                <button class="notes-confirm btn-primary" id="notesConfirm">Add to Collection</button>
+            </div>
+        </div>
+    </div>
+
     <!-- keep-awake UI removed -->
 
     <!-- OAuth Client -->
