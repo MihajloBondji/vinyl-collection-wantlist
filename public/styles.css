@@ -567,7 +567,7 @@ header h1 {
     transition: opacity 0.3s ease;
 }
 
-.wantlist-item.item-selected .item-notes-edit-btn {
+.list-grid:not(.wantlist-view) .wantlist-item.item-selected .item-notes-edit-btn {
     display: inline-block;
     opacity: 1;
 }
