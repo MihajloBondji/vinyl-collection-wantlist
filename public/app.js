@@ -865,21 +865,19 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
             );
             console.log('Add to collection response:', addResponse);
 
-            // If notes provided, update the instance notes
+            // If notes provided, update the instance notes (field_id 3)
             const newInstanceId = addResponse?.instance_id || addResponse?.instanceId;
             if (notes && newInstanceId) {
                 console.log('Setting notes on instance:', {
                     instanceId: newInstanceId,
-                    notes: notes,
-                    payload: { value: notes }
+                    notes: notes
                 });
                 try {
+                    // Use the correct endpoint: POST with value as query parameter
+                    // POST /users/{username}/collection/folders/{folder_id}/releases/{release_id}/instances/{instance_id}/fields/{field_id}?value=...
                     const notesResponse = await window.discogsOAuth.makeAuthenticatedRequest(
-                        `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}`,
-                        { 
-                            method: 'POST', 
-                            body: { value: notes }
-                        }
+                        `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}/fields/3?value=${encodeURIComponent(notes)}`,
+                        { method: 'POST' }
                     );
                     console.log('Notes update response:', notesResponse);
                 } catch (notesError) {
