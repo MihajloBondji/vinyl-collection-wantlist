@@ -6,32 +6,24 @@ on:
   push:
     branches:
       - main
-jobs:
-  check-changes:
-    runs-on: ubuntu-latest
-    outputs:
-      frontend: ${{ steps.filter.outputs.frontend }}
-      backend: ${{ steps.filter.outputs.backend }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: dorny/paths-filter@v1
-        id: filter
-        with:
-          filters: |
-            frontend:
-              - 'public/**'
-              - 'firebase.json'
-            backend:
-              - 'functions/**'
-              - 'fly.toml'
 
+jobs:
   deploy_frontend:
-    needs: check-changes
-    if: ${{ needs.check-changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check if frontend files changed
+        id: frontend_changed
+        run: |
+          if git diff HEAD~1 HEAD --name-only | grep -E '(^public/|^firebase.json)'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
       - uses: FirebaseExtended/action-hosting-deploy@v0
+        if: steps.frontend_changed.outputs.changed == 'true'
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_VINYL_COLLECTION_WANTLIST }}
@@ -39,13 +31,23 @@ jobs:
           projectId: vinyl-collection-wantlist
 
   deploy_backend:
-    needs: check-changes
-    if: ${{ needs.check-changes.outputs.backend == 'true' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check if backend files changed
+        id: backend_changed
+        run: |
+          if git diff HEAD~1 HEAD --name-only | grep -E '(^functions/|^fly.toml)'; then
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
       - uses: superfly/flyctl-actions/setup-flyctl@master
+        if: steps.backend_changed.outputs.changed == 'true'
       - name: Deploy Backend to Fly.io
+        if: steps.backend_changed.outputs.changed == 'true'
         run: flyctl deploy -a vinyl-collection-backend
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
