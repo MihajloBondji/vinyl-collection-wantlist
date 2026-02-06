@@ -627,6 +627,23 @@ footer a:hover {
     z-index: 99;
 }
 
+.move-loading {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10002;
+}
+
+.move-loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
 .item-selected{
     position: absolute;
     width: 500px;

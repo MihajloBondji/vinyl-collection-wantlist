@@ -130,6 +130,7 @@ function clearCache(key) {
 // DOM Elements
 const wantlistContainer = document.getElementById('wantlistContainer');
 const loadingSpinner = document.getElementById('loadingSpinner');
+const moveLoading = document.getElementById('moveLoading');
 const errorMessage = document.getElementById('errorMessage');
 const userInfo = document.getElementById('userInfo');
 const refreshBtn = document.getElementById('refreshBtn');
@@ -835,7 +836,7 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
     }
 
     try {
-        showLoading(true);
+        showMoveLoading(true);
         hideError();
 
         const username = DISCOGS_USERNAME;
@@ -878,10 +879,10 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
         clearCache(CACHE_KEYS.collection);
 
         overlay.classList.add('hidden');
-        showLoading(false);
+        showMoveLoading(false);
         fetchData();
     } catch (error) {
-        showLoading(false);
+        showMoveLoading(false);
         console.error('Error moving item:', error);
         showError(`Error moving item: ${error.message}`);
     }
@@ -965,6 +966,18 @@ function showLoading(show) {
         loadingSpinner.classList.remove('hidden');
     } else {
         loadingSpinner.classList.add('hidden');
+    }
+}
+
+function showMoveLoading(show) {
+    if (!moveLoading) {
+        return;
+    }
+
+    if (show) {
+        moveLoading.classList.remove('hidden');
+    } else {
+        moveLoading.classList.add('hidden');
     }
 }
 
