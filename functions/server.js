@@ -218,12 +218,18 @@ app.post('/api/request', async (req, res) => {
             }
         };
 
-        if (body) {
+        if (body && (method === 'POST' || method === 'PUT')) {
             fetchOptions.body = JSON.stringify(body);
             fetchOptions.headers['Content-Type'] = 'application/json';
         }
 
         const response = await fetch(url, fetchOptions);
+        
+        // For DELETE requests, Discogs returns 204 No Content on success
+        if (response.status === 204) {
+            return res.json({ success: true });
+        }
+        
         const data = await response.json();
 
         if (!response.ok) {

@@ -755,24 +755,26 @@ async function moveItem(itemId, fromPath, toPath) {
         const username = DISCOGS_USERNAME;
 
         if (fromPath === '/collection' && toPath === '/wantlist') {
-            // Remove from collection, add to wantlist
+            // Remove from collection
             await window.discogsOAuth.makeAuthenticatedRequest(
                 `${DISCOGS_API_BASE}/users/${username}/collection/folders/0/releases/${itemId}`,
                 { method: 'DELETE' }
             );
+            // Add to wantlist
             await window.discogsOAuth.makeAuthenticatedRequest(
-                `${DISCOGS_API_BASE}/users/${username}/wants/${itemId}`,
-                { method: 'POST' }
+                `${DISCOGS_API_BASE}/users/${username}/wants`,
+                { method: 'POST', body: { resource_url: `${DISCOGS_API_BASE}/releases/${itemId}` } }
             );
         } else if (fromPath === '/wantlist' && toPath === '/collection') {
-            // Remove from wantlist, add to collection
+            // Remove from wantlist
             await window.discogsOAuth.makeAuthenticatedRequest(
                 `${DISCOGS_API_BASE}/users/${username}/wants/${itemId}`,
                 { method: 'DELETE' }
             );
+            // Add to collection
             await window.discogsOAuth.makeAuthenticatedRequest(
-                `${DISCOGS_API_BASE}/users/${username}/collection/folders/0/releases/${itemId}`,
-                { method: 'POST' }
+                `${DISCOGS_API_BASE}/users/${username}/collection/folders/0/releases`,
+                { method: 'POST', body: { resource_url: `${DISCOGS_API_BASE}/releases/${itemId}` } }
             );
         }
 
@@ -807,9 +809,10 @@ function createItemElement(item) {
     
     let moveButtonHtml = '';
     if (isAuthenticated) {
-        const moveText = currentPath === '/wantlist' ? t('add_to_collection') || 'Add to Collection' : t('move_to_wantlist') || 'Move to Wantlist';
+        const moveTooltip = currentPath === '/wantlist' ? t('add_to_collection') || 'Add to Collection' : t('move_to_wantlist') || 'Move to Wantlist';
+        const moveText = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 1024 1024" enable-background="new 0 0 1024 1024" xml:space="preserve"> <g> <rect y="1" fill="none" width="1024" height="1024"/> </g> <g> <path d="M72.819,404.342l668.466-1.149l0.254,57.836c0.255,60.213,36.45,85.954,80.47,57.147l169.44-146.048   c44.055-28.764,43.834-75.651-0.407-104.111L820.281,113.958c-44.24-28.443-80.231-2.379-79.979,57.874l0.236,57.775L72.091,230.7   c-39.887,0.196-72.034,39.191-71.847,87.146C0.447,365.791,32.949,404.526,72.819,404.342z"/> <path d="M951.783,620.335L283.3,621.463l-0.254-57.818c-0.238-60.235-36.449-85.976-80.452-57.147L33.152,652.524   c-44.054,28.788-43.834,75.667,0.39,104.14l170.779,154.034c44.24,28.465,80.232,2.383,79.961-57.853l-0.237-57.801l668.466-1.085   c39.871-0.179,72.017-39.175,71.848-87.146C1024.156,658.861,991.653,620.131,951.783,620.335z"/> </g> </svg>';
         const targetPath = currentPath === '/wantlist' ? '/collection' : '/wantlist';
-        moveButtonHtml = `<button class="item-move-btn" onclick="moveItem(${item.id}, '${currentPath}', '${targetPath}')">${moveText}</button>`;
+        moveButtonHtml = `<button class="item-move-btn" onclick="moveItem(${item.id}, '${currentPath}', '${targetPath}')" title="${moveTooltip}">${moveText}</button>`;
     }
     
     div.innerHTML = `

@@ -549,8 +549,7 @@ header h1 {
 
 .item-actions {
     display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
+    justify-content: space-between;
     margin-top: auto;
 }
 
@@ -567,16 +566,23 @@ header h1 {
     color: var(--primary-color);
 }
 
-.item-move-btn {
-    padding: 0.5rem 1rem;
+.item-move-btn{
+    display: none;
+}
+
+.item-selected .item-move-btn {
     background-color: var(--primary-color);
     color: var(--dark-bg);
     border: none;
-    border-radius: 4px;
-    font-weight: 600;
-    font-size: 0.85rem;
     cursor: pointer;
+    transition: var(--transition);    
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
     transition: var(--transition);
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
 }
 
 .item-move-btn:hover {
