@@ -11,7 +11,6 @@ const urlParams = new URLSearchParams(queryString);
 if (window.discogsOAuth && window.discogsOAuth.isAuthenticated) {
     USE_OAUTH = true;
     DISCOGS_USERNAME = window.discogsOAuth.username;
-    console.log('Using OAuth authentication for:', DISCOGS_USERNAME);
 } else {
     // Fall back to URL parameters or config
     const tokenParam = urlParams.get('token');
@@ -146,7 +145,6 @@ let collectionSections = null;
 
 // OAuth event listeners
 window.addEventListener('oauth-authenticated', (e) => {
-    console.log('OAuth authenticated:', e.detail.username);
     DISCOGS_USERNAME = e.detail.username;
     USE_OAUTH = true;
     updateAuthUI();
@@ -154,7 +152,6 @@ window.addEventListener('oauth-authenticated', (e) => {
 });
 
 window.addEventListener('oauth-logout', () => {
-    console.log('OAuth logged out');
     DISCOGS_USERNAME = null;
     USE_OAUTH = false;
     updateAuthUI();
@@ -601,7 +598,6 @@ async function fetchItems(apiUrl) {
                 }
 
                 const data = await response.json();
-                console.log('API Response:', data);
                 
                 // Handle both wantlist and collection responses
                 const items = data.wants || data.releases || data;
@@ -863,15 +859,10 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
                 `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}`,
                 { method: 'POST' }
             );
-            console.log('Add to collection response:', addResponse);
 
             // If notes provided, update the instance notes (field_id 3)
             const newInstanceId = addResponse?.instance_id || addResponse?.instanceId;
             if (notes && newInstanceId) {
-                console.log('Setting notes on instance:', {
-                    instanceId: newInstanceId,
-                    notes: notes
-                });
                 try {
                     // Use the correct endpoint: POST with value as query parameter
                     // POST /users/{username}/collection/folders/{folder_id}/releases/{release_id}/instances/{instance_id}/fields/{field_id}?value=...
@@ -879,7 +870,6 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
                         `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}/fields/3?value=${encodeURIComponent(notes)}`,
                         { method: 'POST' }
                     );
-                    console.log('Notes update response:', notesResponse);
                 } catch (notesError) {
                     console.error('Error setting notes:', notesError);
                     // Don't fail the entire move if notes fail
