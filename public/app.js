@@ -849,14 +849,18 @@ async function editItemNotes(event, itemId, releaseId, instanceId) {
             const newNotes = notesPopupElements.input.value.trim();
             
             try {
+                showMoveLoading(true);
+                
                 // POST to the notes endpoint with the new value
                 await window.discogsOAuth.makeAuthenticatedRequest(
                     `${DISCOGS_API_BASE}/users/${DISCOGS_USERNAME}/collection/folders/1/releases/${releaseId}/instances/${instanceId}/fields/3`,
                     { method: 'POST', body: { value: newNotes } }
                 );
                 
-                // Update the item locally
-                item.notes = newNotes;
+                // Parse the new notes to extract tag and notes
+                const parsedNotes = parseNotesTag(newNotes);
+                item.tag = parsedNotes.tag;
+                item.notes = parsedNotes.notes;
                 
                 // Re-render to show updated notes
                 applySort();
@@ -864,7 +868,9 @@ async function editItemNotes(event, itemId, releaseId, instanceId) {
                 
                 closeNotesPopup(null);
                 overlay.classList.add('hidden');
+                showMoveLoading(false);
             } catch (error) {
+                showMoveLoading(false);
                 showError(`Error saving notes: ${error.message}`);
             }
         };
