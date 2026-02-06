@@ -3,4 +3,4 @@ config.local.js
 .env
 .env.local
 .DS_Store
-.code-workspace
+vinyl-collection-wantlist.code-workspace
