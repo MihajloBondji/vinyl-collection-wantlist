@@ -170,10 +170,10 @@ window.LANGUAGES_DATA = {
     "enter_username": "URLに?username=YOUR_USERNAMEを追加するか、OAuthでログインしてください。",
     "add_to_collection": "コレクションに追加",
     "move_to_wantlist": "ウィッシュリストに移動",
-      "add_notes_title": "メモを追加",
-      "notes_label": "メモ（任意）",
-      "notes_placeholder": "例: D- 状態良好、オリジナル盤",
-      "cancel": "キャンセル",
+    "add_notes_title": "メモを追加",
+    "notes_label": "メモ（任意）",
+    "notes_placeholder": "例: D- 状態良好、オリジナル盤",
+    "cancel": "キャンセル",
     "help_sections": [
       {
         "title": "カテゴリ設定",
