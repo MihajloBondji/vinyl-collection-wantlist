@@ -219,8 +219,18 @@ app.post('/api/request', async (req, res) => {
         };
 
         if (body && (method === 'POST' || method === 'PUT')) {
-            fetchOptions.body = JSON.stringify(body);
-            fetchOptions.headers['Content-Type'] = 'application/json';
+            // For Discogs instance notes endpoint, use form-encoded data instead of JSON
+            if (url.includes('/instances/') && Object.keys(body).length > 0) {
+                const params = new URLSearchParams();
+                Object.keys(body).forEach(key => {
+                    params.append(key, body[key]);
+                });
+                fetchOptions.body = params.toString();
+                fetchOptions.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+            } else {
+                fetchOptions.body = JSON.stringify(body);
+                fetchOptions.headers['Content-Type'] = 'application/json';
+            }
         }
 
         console.log('Discogs API Request:', {
