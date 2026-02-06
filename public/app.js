@@ -864,14 +864,13 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
             const newInstanceId = addResponse?.instance_id || addResponse?.instanceId;
             if (notes && newInstanceId) {
                 try {
-                    // Use the correct endpoint: POST with value as query parameter
-                    // POST /users/{username}/collection/folders/{folder_id}/releases/{release_id}/instances/{instance_id}/fields/{field_id}?value=...
+                    // POST /users/{username}/collection/folders/{folder_id}/releases/{release_id}/instances/{instance_id}/fields/{field_id}
+                    // Value is sent in the request body
                     const notesResponse = await window.discogsOAuth.makeAuthenticatedRequest(
-                        `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}/fields/3?value=${encodeURIComponent(notes)}`,
-                        { method: 'POST' }
+                        `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}/fields/3`,
+                        { method: 'POST', body: { value: notes } }
                     );
                 } catch (notesError) {
-                    console.error('Error setting notes:', notesError);
                     // Don't fail the entire move if notes fail
                 }
             }
