@@ -158,7 +158,9 @@ window.addEventListener('oauth-error', (e) => {
 });
 
 function updateAuthUI() {
-    if (USE_OAUTH && window.discogsOAuth.isAuthenticated) {
+    const isAuthenticated = window.discogsOAuth && window.discogsOAuth.isAuthenticated;
+    
+    if (isAuthenticated) {
         loginBtn.classList.add('hidden');
         logoutBtn.classList.remove('hidden');
     } else {

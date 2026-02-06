@@ -76,6 +76,8 @@ header {
     align-items: center;
     margin-top: 4rem;
     margin-bottom: 1rem;
+    flex-wrap: wrap-reverse;
+    row-gap: 2rem;
 }
 
 /* Language Selector */
