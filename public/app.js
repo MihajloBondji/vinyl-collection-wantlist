@@ -529,6 +529,8 @@ async function fetchItems(apiUrl) {
 
                         allItems.push({
                             id: item.id,
+                            releaseId: basicInfo.id || item.id,
+                            instanceId: item.instance_id,
                             title: basicInfo.title,
                             artist: basicInfo.artists?.[0]?.name || 'Unknown',
                             year: basicInfo.year,
@@ -572,6 +574,8 @@ async function fetchItems(apiUrl) {
 
                         allItems.push({
                             id: item.id,
+                            releaseId: basicInfo.id || item.id,
+                            instanceId: item.instance_id,
                             title: basicInfo.title,
                             artist: basicInfo.artists?.[0]?.name || 'Unknown',
                             year: basicInfo.year,
@@ -742,7 +746,7 @@ function renderCollectionSection(section, items) {
 // SVG placeholder as data URI - no external dependencies
 const PLACEHOLDER_IMAGE = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="150" height="150"%3E%3Crect width="150" height="150" fill="%23404040"/%3E%3Ctext x="50%25" y="50%25" font-family="Arial" font-size="14" fill="%23b3b3b3" text-anchor="middle" dominant-baseline="middle"%3ENo Image%3C/text%3E%3C/svg%3E';
 
-async function moveItem(itemId, fromPath, toPath) {
+async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
     if (!window.discogsOAuth || !window.discogsOAuth.isAuthenticated) {
         showError('You must be logged in with OAuth to move items');
         return;
@@ -755,26 +759,26 @@ async function moveItem(itemId, fromPath, toPath) {
         const username = DISCOGS_USERNAME;
 
         if (fromPath === '/collection' && toPath === '/wantlist') {
-            // Remove from collection
+            // Remove from collection (requires instance_id)
             await window.discogsOAuth.makeAuthenticatedRequest(
-                `${DISCOGS_API_BASE}/users/${username}/collection/folders/0/releases/${itemId}`,
+                `${DISCOGS_API_BASE}/users/${username}/collection/folders/0/releases/${releaseId}/instances/${instanceId}`,
                 { method: 'DELETE' }
             );
-            // Add to wantlist
+            // Add to wantlist (use PUT to add by release_id)
             await window.discogsOAuth.makeAuthenticatedRequest(
-                `${DISCOGS_API_BASE}/users/${username}/wants`,
-                { method: 'POST', body: { resource_url: `${DISCOGS_API_BASE}/releases/${itemId}` } }
+                `${DISCOGS_API_BASE}/users/${username}/wants/${releaseId}`,
+                { method: 'PUT' }
             );
         } else if (fromPath === '/wantlist' && toPath === '/collection') {
-            // Remove from wantlist
+            // Remove from wantlist (wants endpoint uses release_id)
             await window.discogsOAuth.makeAuthenticatedRequest(
-                `${DISCOGS_API_BASE}/users/${username}/wants/${itemId}`,
+                `${DISCOGS_API_BASE}/users/${username}/wants/${releaseId}`,
                 { method: 'DELETE' }
             );
-            // Add to collection
+            // Add to collection (POST to folder with release_id)
             await window.discogsOAuth.makeAuthenticatedRequest(
-                `${DISCOGS_API_BASE}/users/${username}/collection/folders/0/releases`,
-                { method: 'POST', body: { resource_url: `${DISCOGS_API_BASE}/releases/${itemId}` } }
+                `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}`,
+                { method: 'POST' }
             );
         }
 
@@ -812,7 +816,7 @@ function createItemElement(item) {
         const moveTooltip = currentPath === '/wantlist' ? t('add_to_collection') || 'Add to Collection' : t('move_to_wantlist') || 'Move to Wantlist';
         const moveText = '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Layer_1" x="0px" y="0px" width="1rem" height="1rem" viewBox="0 0 1024 1024" enable-background="new 0 0 1024 1024" xml:space="preserve"> <g> <rect y="1" fill="none" width="1024" height="1024"/> </g> <g> <path d="M72.819,404.342l668.466-1.149l0.254,57.836c0.255,60.213,36.45,85.954,80.47,57.147l169.44-146.048   c44.055-28.764,43.834-75.651-0.407-104.111L820.281,113.958c-44.24-28.443-80.231-2.379-79.979,57.874l0.236,57.775L72.091,230.7   c-39.887,0.196-72.034,39.191-71.847,87.146C0.447,365.791,32.949,404.526,72.819,404.342z"/> <path d="M951.783,620.335L283.3,621.463l-0.254-57.818c-0.238-60.235-36.449-85.976-80.452-57.147L33.152,652.524   c-44.054,28.788-43.834,75.667,0.39,104.14l170.779,154.034c44.24,28.465,80.232,2.383,79.961-57.853l-0.237-57.801l668.466-1.085   c39.871-0.179,72.017-39.175,71.848-87.146C1024.156,658.861,991.653,620.131,951.783,620.335z"/> </g> </svg>';
         const targetPath = currentPath === '/wantlist' ? '/collection' : '/wantlist';
-        moveButtonHtml = `<button class="item-move-btn" onclick="moveItem(${item.id}, '${currentPath}', '${targetPath}')" title="${moveTooltip}">${moveText}</button>`;
+        moveButtonHtml = `<button class="item-move-btn" onclick="moveItem(${item.id}, ${item.releaseId}, ${item.instanceId || 'null'}, '${currentPath}', '${targetPath}')" title="${moveTooltip}">${moveText}</button>`;
     }
     
     div.innerHTML = `
