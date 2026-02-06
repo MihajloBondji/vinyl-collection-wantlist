@@ -253,6 +253,12 @@ app.get('/health', (req, res) => {
     res.json({ status: 'ok' });
 });
 
+// Catch-all 404 handler
+app.use((req, res) => {
+    console.log(`[ERROR] 404 - No route found for ${req.method} ${req.path}`);
+    res.status(404).json({ error: 'Not found' });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`OAuth server running on port ${PORT}`);
