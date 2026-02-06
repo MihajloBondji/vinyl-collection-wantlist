@@ -867,12 +867,11 @@ async function moveItem(itemId, releaseId, instanceId, fromPath, toPath) {
             const newInstanceId = addResponse?.instance_id || addResponse?.instanceId;
             if (notes && newInstanceId) {
                 // Set notes on the instance
-                // Try sending notes as direct value with field_id in URL or as form data
                 const notesResponse = await window.discogsOAuth.makeAuthenticatedRequest(
                     `${DISCOGS_API_BASE}/users/${username}/collection/folders/1/releases/${releaseId}/instances/${newInstanceId}`,
                     { 
                         method: 'POST', 
-                        body: { value: notes }
+                        body: { notes: notes }
                     }
                 );
                 console.log('Notes API response:', notesResponse);
