@@ -1,25 +1,33 @@
 // Configuration
-// Load from config.local.js if available (local development with token)
-// Otherwise use defaults (public version without token)
+// Priority: OAuth > URL params > config.local.js
 let DISCOGS_USERNAME = null;
 let DISCOGS_TOKEN = null;
+let USE_OAUTH = false;
 
 const queryString = window.location.search;
 const urlParams = new URLSearchParams(queryString);
 
-const tokenParam = urlParams.get('token');
-const usernameParam = urlParams.get('username');
+// Check if OAuth is available and authenticated
+if (window.discogsOAuth && window.discogsOAuth.isAuthenticated) {
+    USE_OAUTH = true;
+    DISCOGS_USERNAME = window.discogsOAuth.username;
+    console.log('Using OAuth authentication for:', DISCOGS_USERNAME);
+} else {
+    // Fall back to URL parameters or config
+    const tokenParam = urlParams.get('token');
+    const usernameParam = urlParams.get('username');
 
-if (usernameParam) {
-    DISCOGS_USERNAME = usernameParam;
-} else if (typeof CONFIG !== 'undefined') {
-    DISCOGS_USERNAME = CONFIG.DISCOGS_USERNAME || DISCOGS_USERNAME;
-}
+    if (usernameParam) {
+        DISCOGS_USERNAME = usernameParam;
+    } else if (typeof CONFIG !== 'undefined') {
+        DISCOGS_USERNAME = CONFIG.DISCOGS_USERNAME || DISCOGS_USERNAME;
+    }
 
-if (tokenParam) {
-    DISCOGS_TOKEN = tokenParam;
-} else if (typeof CONFIG !== 'undefined') {
-    DISCOGS_TOKEN = CONFIG.DISCOGS_TOKEN || null;
+    if (tokenParam) {
+        DISCOGS_TOKEN = tokenParam;
+    } else if (typeof CONFIG !== 'undefined') {
+        DISCOGS_TOKEN = CONFIG.DISCOGS_TOKEN || null;
+    }
 }
 
 const DISCOGS_API_BASE = 'https://api.discogs.com';
@@ -123,13 +131,64 @@ const sortDropdown = document.getElementById('sortDropdown');
 const sortLabel = document.getElementById('sortLabel');
 const shopsContainer = document.getElementById('shopsContainer');
 const shopsList = document.getElementById('shopsList');
+const loginBtn = document.getElementById('loginBtn');
+const logoutBtn = document.getElementById('logoutBtn');
 let collectionSections = null;
+
+// OAuth event listeners
+window.addEventListener('oauth-authenticated', (e) => {
+    console.log('OAuth authenticated:', e.detail.username);
+    DISCOGS_USERNAME = e.detail.username;
+    USE_OAUTH = true;
+    updateAuthUI();
+    fetchData();
+});
+
+window.addEventListener('oauth-logout', () => {
+    console.log('OAuth logged out');
+    DISCOGS_USERNAME = null;
+    USE_OAUTH = false;
+    updateAuthUI();
+    wantlistContainer.innerHTML = '<div class="empty-state"><p data-i18n="login_required">Please login to view your collection.</p></div>';
+    updateUIText();
+});
+
+window.addEventListener('oauth-error', (e) => {
+    showError(e.detail.message);
+});
+
+function updateAuthUI() {
+    if (USE_OAUTH && window.discogsOAuth.isAuthenticated) {
+        loginBtn.classList.add('hidden');
+        logoutBtn.classList.remove('hidden');
+    } else {
+        loginBtn.classList.remove('hidden');
+        logoutBtn.classList.add('hidden');
+    }
+}
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
     // Load languages first
     await loadLanguages();
     updateUIText();
+    
+    // Setup OAuth UI
+    updateAuthUI();
+    
+    if (loginBtn) {
+        loginBtn.addEventListener('click', () => {
+            window.discogsOAuth.startOAuthFlow();
+        });
+    }
+    
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (confirm(t('confirm_logout') || 'Are you sure you want to logout?')) {
+                window.discogsOAuth.logout();
+            }
+        });
+    }
     
     // Check for query parameter to determine which view to load
     const urlParams = new URLSearchParams(window.location.search);
@@ -254,7 +313,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
     
     // Load wantlist on page load
-    fetchData();
+    if (DISCOGS_USERNAME) {
+        fetchData();
+    } else if (!USE_OAUTH) {
+        // Show message for non-OAuth users without username
+        wantlistContainer.innerHTML = '<div class="empty-state"><p data-i18n="enter_username">Please add ?username=YOUR_USERNAME to the URL or login with OAuth.</p></div>';
+        updateUIText();
+    }
 
     document.getElementById('overlay').addEventListener('click', () => {
         document.querySelectorAll('.wantlist-item.item-selected').forEach(item => {
@@ -444,47 +509,85 @@ async function fetchItems(apiUrl) {
 
         while (hasMore) {
             let url = `${apiUrl}?page=${page}&per_page=${ITEMS_PER_PAGE}`;
-            if (DISCOGS_TOKEN) {
-                url += `&token=${DISCOGS_TOKEN}`;
-            }
             
-            const response = await fetch(url);
+            let response;
             
-            if (!response.ok) {
-                throw new Error(`Failed to fetch wantlist items: ${response.statusText}`);
-            }
+            if (USE_OAUTH && window.discogsOAuth) {
+                // Use OAuth authenticated request
+                const data = await window.discogsOAuth.makeAuthenticatedRequest(url);
+                
+                // Handle both wantlist and collection responses
+                const items = data.wants || data.releases || data;
+                
+                if (Array.isArray(items)) {
+                    items.forEach(item => {
+                        const basicInfo = item.basic_information || item;
+                        const rawNotes = (Array.isArray(item.notes) && item.notes.find(n => n.field_id === 3)?.value) || '';
+                        const parsedNotes = parseNotesTag(rawNotes);
 
-            const data = await response.json();
-            console.log('API Response:', data);
-            
-            // Handle both wantlist and collection responses
-            const items = data.wants || data.releases || data;
-            
-            if (Array.isArray(items)) {
-                items.forEach(item => {
-                    const basicInfo = item.basic_information || item;
-                    const rawNotes = (Array.isArray(item.notes) && item.notes.find(n => n.field_id === 3)?.value) || '';
-                    const parsedNotes = parseNotesTag(rawNotes);
-
-                    allItems.push({
-                        id: item.id,
-                        title: basicInfo.title,
-                        artist: basicInfo.artists?.[0]?.name || 'Unknown',
-                        year: basicInfo.year,
-                        thumb: basicInfo.thumb,
-                        uri: item.uri || '',
-                        resourceUrl: item.resource_url,
-                        dateAdded: item.date_added || new Date().toISOString(),
-                        format: basicInfo.formats?.[0]?.name || 'Unknown',
-                        notes: parsedNotes.notes,
-                        tag: parsedNotes.tag
+                        allItems.push({
+                            id: item.id,
+                            title: basicInfo.title,
+                            artist: basicInfo.artists?.[0]?.name || 'Unknown',
+                            year: basicInfo.year,
+                            thumb: basicInfo.thumb,
+                            uri: item.uri || '',
+                            resourceUrl: item.resource_url,
+                            dateAdded: item.date_added || new Date().toISOString(),
+                            format: basicInfo.formats?.[0]?.name || 'Unknown',
+                            notes: parsedNotes.notes,
+                            tag: parsedNotes.tag
+                        });
                     });
-                });
-            }
+                }
 
-            // Check if there are more pages
-            hasMore = data.pagination?.page < data.pagination?.pages;
-            page++;
+                // Check if there are more pages
+                hasMore = data.pagination?.page < data.pagination?.pages;
+                page++;
+            } else {
+                // Use standard token-based or anonymous authentication
+                if (DISCOGS_TOKEN) {
+                    url += `&token=${DISCOGS_TOKEN}`;
+                }
+                
+                response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch wantlist items: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                console.log('API Response:', data);
+                
+                // Handle both wantlist and collection responses
+                const items = data.wants || data.releases || data;
+                
+                if (Array.isArray(items)) {
+                    items.forEach(item => {
+                        const basicInfo = item.basic_information || item;
+                        const rawNotes = (Array.isArray(item.notes) && item.notes.find(n => n.field_id === 3)?.value) || '';
+                        const parsedNotes = parseNotesTag(rawNotes);
+
+                        allItems.push({
+                            id: item.id,
+                            title: basicInfo.title,
+                            artist: basicInfo.artists?.[0]?.name || 'Unknown',
+                            year: basicInfo.year,
+                            thumb: basicInfo.thumb,
+                            uri: item.uri || '',
+                            resourceUrl: item.resource_url,
+                            dateAdded: item.date_added || new Date().toISOString(),
+                            format: basicInfo.formats?.[0]?.name || 'Unknown',
+                            notes: parsedNotes.notes,
+                            tag: parsedNotes.tag
+                        });
+                    });
+                }
+
+                // Check if there are more pages
+                hasMore = data.pagination?.page < data.pagination?.pages;
+                page++;
+            }
         }
     } catch (error) {
         console.error('Error fetching items:', error);

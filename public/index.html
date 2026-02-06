@@ -21,15 +21,19 @@
                     <button id="collectionTab" class="nav-tab active" data-path="/collection" data-i18n="collection">Collection</button>
                     <button id="wantlistTab" class="nav-tab" data-path="/wantlist" data-i18n="wantlist">Wantlist</button>
                 </nav>
-                <div class="language-selector custom-select">
-                    <button class="sort-select" id="languageBtn">
-                        <span id="languageLabel">English</span>
-                        <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
-                    </button>
-                    <div class="sort-dropdown hidden" id="languageDropdown">
-                        <!-- Language options dynamically loaded from languages.js -->
+                <div class="header-actions">
+                    <button id="loginBtn" class="btn-login hidden" data-i18n="login">Login with Discogs</button>
+                    <button id="logoutBtn" class="btn-logout hidden" data-i18n="logout">Logout</button>
+                    <div class="language-selector custom-select">
+                        <button class="sort-select" id="languageBtn">
+                            <span id="languageLabel">English</span>
+                            <svg class="sort-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="6 9 12 15 18 9"></polyline>
+                            </svg>
+                        </button>
+                        <div class="sort-dropdown hidden" id="languageDropdown">
+                            <!-- Language options dynamically loaded from languages.js -->
+                        </div>
                     </div>
                 </div>
             </div>
@@ -103,8 +107,16 @@
 
     <!-- keep-awake UI removed -->
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-functions-compat.js"></script>
+
+    <!-- Firebase Configuration -->
+    <script src="firebase-config.js"></script>
+
     <script src="languages.js"></script>
     <script src="language-manager.js"></script>
+    <script src="oauth-cloud.js"></script>
     <script src="config.local.js"></script>
     <script src="app.js"></script>
 </body>

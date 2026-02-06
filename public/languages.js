@@ -23,6 +23,11 @@ window.LANGUAGES_DATA = {
     "domestic": "Domestic",
     "uncategorized": "Uncategorized",
     "help": "Help",
+    "login": "Login with Discogs",
+    "logout": "Logout",
+    "confirm_logout": "Are you sure you want to logout?",
+    "login_required": "Please login to view your collection.",
+    "enter_username": "Please add ?username=YOUR_USERNAME to the URL or login with OAuth.",
     "help_sections": [
       {
         "title": "Setting Categories",
@@ -31,6 +36,10 @@ window.LANGUAGES_DATA = {
       {
         "title": "Query Parameters",
         "content": "You can customize the app using URL parameters:<br><br><strong>?username=YOUR_USERNAME</strong> - Set your Discogs username<br><strong>&token=YOUR_TOKEN</strong> - Add your Discogs API token (optional, mainly for wantlist album cover images and increased rate limits)<br><br>Example: <code>?username=john&token=abc123</code>"
+      },
+      {
+        "title": "OAuth Authentication",
+        "content": "You can login with your Discogs account using OAuth for a better experience:<br><br>• Click the \"Login with Discogs\" button<br>• Authorize the application<br>• Your credentials are securely stored<br>• No need to manually enter username/token<br>• Access to private collections and write operations"
       }
     ]
   },

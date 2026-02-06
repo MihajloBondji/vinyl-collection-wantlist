@@ -4,7 +4,8 @@ A beautiful, responsive web application for viewing and managing your Discogs vi
 
 ## ✨ Features
 
-- **📀 Dual View Modes**: Switch between Collection and Wantlist views
+- **� OAuth Authentication**: Secure login with your Discogs account
+- **�📀 Dual View Modes**: Switch between Collection and Wantlist views
 - **🌍 Multi-Language Support**: Available in 8 languages (English, Српски, Srpski, 日本語, Deutsch, Français, Español, Русский)
 - **🏷️ Smart Categorization**: Organize your collection into Foreign, Domestic, and Uncategorized sections
 - **🔍 Real-time Search**: Filter items by artist, title, or format with debounced search
@@ -17,17 +18,34 @@ A beautiful, responsive web application for viewing and managing your Discogs vi
 
 ## 🚀 Quick Start
 
-### Public Use (GitHub Pages / Firebase Hosting)
+### Option 1: OAuth with Cloud Functions (Most Secure - Recommended)
 
-1. Navigate to the hosted URL
-2. Add query parameters:
+1. **Setup Firebase Cloud Functions** (keeps your Consumer Secret safe):
+   - Follow the [Cloud Functions Setup Guide](CLOUD_FUNCTIONS_SETUP.md)
+   - Takes ~5-10 minutes
+   - Your Consumer Secret never touches the browser
+
+2. **Configure Firebase in your app**:
+   - Update `public/firebase-config.js` with your Firebase project settings
+
+3. **Deploy**:
+   ```bash
+   firebase deploy
    ```
-   ?username=YOUR_DISCOGS_USERNAME
-   ```
-3. Optional: Add API token for wantlist images and increased rate limits:
-   ```
-   ?username=YOUR_DISCOGS_USERNAME&token=YOUR_DISCOGS_TOKEN
-   ```
+
+**Why this is better:**
+- ✅ Completely secure - Consumer Secret stays on Firebase
+- ✅ Safe to push to public GitHub
+- ✅ Professional OAuth implementation
+- ✅ Free Firebase tier easily covers your needs
+
+### Option 2: OAuth Login (Simpler, Less Secure)
+
+For local testing or private projects - follow [OAuth Setup Guide](OAUTH_SETUP.md)
+
+### Option 3: URL Parameters (Legacy Method)
+
+Navigate to: `?username=YOUR_DISCOGS_USERNAME&token=YOUR_TOKEN`
 
 ## 🎯 Usage Guide
 
@@ -122,6 +140,7 @@ const VINYL_SHOPS = [
 ```
 vinyl-collection-wantlist/
 ├── public/
+│   ├── oauth.js               # OAuth authentication manager
 │   ├── app.js                 # Main application logic
 │   ├── language-manager.js    # i18n system
 │   ├── languages.js           # Translation data
@@ -163,13 +182,26 @@ Edit CSS variables in `public/styles.css`:
 
 The responsive grid automatically adjusts based on screen width. Edit the `divider` logic in `app.js` to customize breakpoints.
 
-## 🔑 Getting a Discogs API Token
+### For OAuth (Recommended)
 
-1. Go to [Discogs Settings](https://www.discogs.com/settings/developers)
+1. Go to [Discogs Developer Settings](https://www.discogs.com/settings/developers)
+2. Click "Create an Application"
+3. Fill in your application details
+4. Copy your Consumer Key and Secret
+5. Add them to `public/oauth.js`
+
+### For URL Token Method (Legacy)
+
+1. Go to [Discogs Developer Settings](https://www.discogs.com/settings/developers)
 2. Click "Generate new token"
 3. Copy the token and use it in the URL or `config.local.js`
 
-**Note**: Token is optional but recommended for:
+**Note**: OAuth is recommended for:
+- Better security (no tokens in URLs)
+- Access to private collections
+- Session persistence
+- Future write operations
+- Professional user experience
 - Viewing wantlist album cover images
 - Higher API rate limits (60 requests/min vs 25 requests/min)
 
