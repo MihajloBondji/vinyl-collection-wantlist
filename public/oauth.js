@@ -118,7 +118,7 @@ class DiscogsOAuth {
             const callbackUrl = window.location.origin + window.location.pathname;
             
             // Call backend to get request token
-            const response = await fetch(`${this.BACKEND_URL}/oauth/request-token`, {
+            const response = await fetch(`${this.BACKEND_URL}/api/oauth/request-token`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ callbackUrl })
@@ -144,7 +144,7 @@ class DiscogsOAuth {
     }
     
     async getAccessToken(oauthToken, oauthTokenSecret, oauthVerifier) {
-        const response = await fetch(`${this.BACKEND_URL}/oauth/access-token`, {
+        const response = await fetch(`${this.BACKEND_URL}/api/oauth/access-token`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -178,7 +178,7 @@ class DiscogsOAuth {
         }
         
         try {
-            const response = await fetch(`${this.BACKEND_URL}/oauth/verify`, {
+            const response = await fetch(`${this.BACKEND_URL}/api/oauth/verify`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
