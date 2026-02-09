@@ -4,7 +4,7 @@ const { generateNonce, buildAuthHeader } = require('./utils');
 const CONSUMER_KEY = process.env.DISCOGS_CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.DISCOGS_CONSUMER_SECRET;
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST,GET,PUT,DELETE,OPTIONS');

@@ -1,11 +1,11 @@
 const fetch = require('node-fetch');
-const { generateNonce, buildAuthHeader, parseOAuthResponse } = require('./utils');
+const { generateNonce, buildAuthHeader, parseOAuthResponse } = require('../utils');
 
 const CONSUMER_KEY = process.env.DISCOGS_CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.DISCOGS_CONSUMER_SECRET;
 const OAUTH_REQUEST_TOKEN_URL = 'https://api.discogs.com/oauth/request_token';
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');

@@ -5,7 +5,7 @@ const CONSUMER_KEY = process.env.DISCOGS_CONSUMER_KEY;
 const CONSUMER_SECRET = process.env.DISCOGS_CONSUMER_SECRET;
 const IDENTITY_URL = 'https://api.discogs.com/oauth/identity';
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
     // CORS headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
