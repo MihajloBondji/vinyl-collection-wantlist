@@ -3,11 +3,6 @@
 .env.local
 .env.*.local
 
-# Ignore environment files in functions
-functions/.env
-functions/.env.local
-functions/.env.*.local
-
 # Dependencies
 node_modules/
 package-lock.json
@@ -37,4 +32,4 @@ yarn-error.log*
 # Build
 dist/
 build/
-.firebase/
+.vercel

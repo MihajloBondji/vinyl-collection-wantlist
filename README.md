@@ -25,7 +25,7 @@ A beautiful, responsive web application for viewing and managing your Discogs vi
 This app uses:
 - **Frontend**: Static HTML/JS (runs in browser)
 - **Backend**: Express.js OAuth server (keeps your Consumer Secret safe)
-- **Hosting**: Firebase Hosting (frontend) + Fly.io (backend)
+- **Hosting**: Vercel (frontend + backend serverless functions)
 
 ### Option 1: Local Testing
 
@@ -42,9 +42,7 @@ npx http-server public --port 8080
 
 ### Option 2: Deploy to Production
 
-1. Deploy backend to Fly.io: `flyctl deploy -a vinyl-collection-backend`
-2. Deploy frontend to Firebase Hosting: `firebase deploy --only hosting`
-3. See [DEPLOY.md](DEPLOY.md) for full instructions
+1. Deploy to Vercel: See [VERCEL_SETUP.md](VERCEL_SETUP.md) for full instructions
 
 **Why this setup is secure:**
 - ✅ Consumer Secret never exposed to browser
@@ -55,9 +53,8 @@ npx http-server public --port 8080
 ## 📚 Documentation
 
 - **[QUICKSTART.md](QUICKSTART.md)** - Get running in 5 minutes
-- **[DEPLOY.md](DEPLOY.md)** - Full deployment guide
-- **[MIGRATION.md](MIGRATION.md)** - What changed from Firebase
-- **Previous Docs** - See below
+- **[VERCEL_SETUP.md](VERCEL_SETUP.md)** - Deploy to Vercel
+- **[DEPLOYMENT.md](DEPLOYMENT.md)** - Deployment guide
 
 ## 🎯 Usage Guide
 
@@ -151,6 +148,13 @@ const VINYL_SHOPS = [
 
 ```
 vinyl-collection-wantlist/
+├── api/
+│   ├── oauth/
+│   │   ├── request-token.js   # Start OAuth flow
+│   │   ├── access-token.js    # Exchange verifier for token
+│   │   └── verify.js          # Verify OAuth identity
+│   ├── request.js             # Discogs API proxy
+│   ├── utils.js               # Shared OAuth utilities
 ├── public/
 │   ├── oauth.js               # OAuth authentication manager
 │   ├── app.js                 # Main application logic
@@ -160,7 +164,8 @@ vinyl-collection-wantlist/
 │   ├── index.html             # Main HTML file
 │   ├── config.local.js        # Local config (gitignored)
 │   └── favicon/               # Favicon assets
-├── firebase.json              # Firebase hosting config
+├── vercel.json                # Vercel deployment config
+├── package.json               # Project dependencies
 └── README.md
 ```
 
