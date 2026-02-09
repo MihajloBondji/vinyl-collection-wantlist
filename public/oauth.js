@@ -25,7 +25,7 @@ class DiscogsOAuth {
     }
     
     getBackendUrl() {
-        // For production, set BACKEND_URL environment variable
+        // For production, Vercel uses relative paths for API
         // For local dev, use localhost:3000
         if (typeof window !== 'undefined' && window.BACKEND_URL) {
             return window.BACKEND_URL;
@@ -34,8 +34,8 @@ class DiscogsOAuth {
         if (host === 'localhost' || host === '127.0.0.1') {
             return 'http://localhost:3000';
         }
-        // Production: replace with your Fly.io URL
-        return 'https://vinyl-collection-backend.fly.dev';
+        // Production: Vercel uses relative paths
+        return '';
     }
     
     init() {
