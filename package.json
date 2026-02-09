@@ -6,9 +6,9 @@
     "node": "20"
   },
   "scripts": {
-    "dev": "vercel dev",
+    "dev": "node server.js",
     "build": "echo 'Build complete'",
-    "start": "vercel dev"
+    "start": "node server.js"
   },
   "dependencies": {
     "node-fetch": "^2.6.11"
