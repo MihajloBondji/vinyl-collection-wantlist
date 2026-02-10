@@ -342,9 +342,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Load wantlist on page load
     if (DISCOGS_USERNAME) {
         fetchData();
-    } else if (!USE_OAUTH) {
-        // Show message for non-OAuth users without username
-        wantlistContainer.innerHTML = '<div class="empty-state"><p data-i18n="enter_username">Please add ?username=YOUR_USERNAME to the URL or login with OAuth.</p></div>';
+    } else {
+        // No username - show login prompt or message
+        if (USE_OAUTH) {
+            // OAuth user but somehow no username
+            wantlistContainer.innerHTML = '<div class="empty-state"><p data-i18n="enter_username">Please add ?username=YOUR_USERNAME to the URL or login with OAuth.</p></div>';
+        } else {
+            // Not logged in at all - show message with login prompt
+            wantlistContainer.innerHTML = '<div class="empty-state"><p data-i18n="enter_username">Please add ?username=YOUR_USERNAME to the URL or login with OAuth.</p></div>';
+        }
         updateUIText();
     }
 
