@@ -164,6 +164,10 @@ window.addEventListener('oauth-error', (e) => {
 });
 
 function updateAuthUI() {
+    if (!loginBtn || !logoutBtn) {
+        return;
+    }
+    
     const isAuthenticated = window.discogsOAuth && window.discogsOAuth.isAuthenticated;
     
     if (isAuthenticated) {
