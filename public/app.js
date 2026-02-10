@@ -139,8 +139,6 @@ const sortDropdown = document.getElementById('sortDropdown');
 const sortLabel = document.getElementById('sortLabel');
 const shopsContainer = document.getElementById('shopsContainer');
 const shopsList = document.getElementById('shopsList');
-const loginBtn = document.getElementById('loginBtn');
-const logoutBtn = document.getElementById('logoutBtn');
 let collectionSections = null;
 
 // OAuth event listeners
@@ -164,6 +162,9 @@ window.addEventListener('oauth-error', (e) => {
 });
 
 function updateAuthUI() {
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
     if (!loginBtn || !logoutBtn) {
         return;
     }
@@ -181,6 +182,10 @@ function updateAuthUI() {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+    // Query DOM elements now that DOM is ready
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    
     // Check for query parameters - if present, logout from OAuth and use query params
     const usernameParam = urlParams.get('username');
     if (usernameParam && window.discogsOAuth && window.discogsOAuth.isAuthenticated) {
@@ -348,7 +353,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         fetchData();
     } else {
         // No username - show login prompt or message
-        wantlistContainer.style.display = '';
         wantlistContainer.innerHTML = '<div class="empty-state"><p data-i18n="enter_username">Please add ?username=YOUR_USERNAME to the URL or login with OAuth.</p></div>';
         updateUIText();
     }
