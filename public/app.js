@@ -182,6 +182,9 @@ function updateAuthUI() {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+    // Parse URL parameters first
+    const urlParams = new URLSearchParams(window.location.search);
+    
     // Query DOM elements now that DOM is ready
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
@@ -227,7 +230,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     // Check for query parameter to determine which view to load
-    const urlParams = new URLSearchParams(window.location.search);
     const viewParam = urlParams.get('view');
     
     if (viewParam === 'wantlist') {
