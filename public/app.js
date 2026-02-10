@@ -177,6 +177,25 @@ function updateAuthUI() {
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+    // Check for query parameters - if present, logout from OAuth and use query params
+    const usernameParam = urlParams.get('username');
+    if (usernameParam && window.discogsOAuth && window.discogsOAuth.isAuthenticated) {
+        // Logout from OAuth and switch to query param mode
+        window.discogsOAuth.logout();
+        DISCOGS_USERNAME = usernameParam;
+        USE_OAUTH = false;
+        const tokenParam = urlParams.get('token');
+        if (tokenParam) {
+            DISCOGS_TOKEN = tokenParam;
+        }
+    }
+    
+    // Load language from query param if provided
+    const langParam = urlParams.get('lang');
+    if (langParam) {
+        CURRENT_LANGUAGE = langParam;
+    }
+    
     // Load languages first
     await loadLanguages();
     updateUIText();
