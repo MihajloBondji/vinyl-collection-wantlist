@@ -94,10 +94,11 @@ const VINYL_SHOPS = [
 // Collection genre subgrouping (configurable)
 const COLLECTION_GENRE_GROUPS = [
     {
-        key: 'folk_world',
-        labelKey: 'genre_group_folk_world',
-        label: 'Folk / World',
-        genres: ['Folk, World, & Country']
+        key: 'folk',
+        labelKey: 'genre_group_folk',
+        label: 'Folk',
+        genres: ['Folk, World, & Country'],
+        exclusive: true
     },
     {
         key: 'pop_rock',
@@ -115,7 +116,8 @@ const COLLECTION_GENRE_GROUPS = [
         key: 'classical_stage',
         labelKey: 'genre_group_classical_stage',
         label: 'Classical / Stage & Screen',
-        genres: ['Classical', 'Stage & Screen']
+        genres: ['Classical', 'Stage & Screen'],
+        exclusive: true
     },
     {
         key: 'specialty',
@@ -901,9 +903,9 @@ function renderCollectionSection(section, items) {
     const renderOrder = [
         'pop_rock',
         'jazz_blues',
-        'folk_world',
-        'specialty',
+        'folk',
         'classical_stage',
+        'specialty',
         COLLECTION_GENRE_FALLBACK.key
     ];
 
