@@ -671,16 +671,8 @@ function getCollectionGenreGroup(item) {
         return 'specialty';
     }
 
-    // Split Folk, World, & Country between Folk and World/Jazz using context
+    // Keep Folk as a strict standalone subgroup
     if (normalizedGenres.includes('folk, world, & country')) {
-        const hasJazzContext = normalizedGenres.includes('jazz')
-            || normalizedGenres.includes('funk / soul')
-            || normalizedGenres.includes('blues');
-
-        if (hasJazzContext || itemTag === 'F') {
-            return 'world_jazz';
-        }
-
         return 'folk';
     }
 
