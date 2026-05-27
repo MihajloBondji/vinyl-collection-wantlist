@@ -671,8 +671,25 @@ function getCollectionGenreGroup(item) {
         return 'specialty';
     }
 
-    // Keep Folk as a strict standalone subgroup
+    // Split Folk, World, & Country with tightened rules
     if (normalizedGenres.includes('folk, world, & country')) {
+        const hasJazzContext = normalizedGenres.includes('jazz')
+            || normalizedGenres.includes('funk / soul')
+            || normalizedGenres.includes('blues');
+        const hasClearlyFolkStyle = normalizedStyles.some(style => {
+            return style.includes('folk') || style.includes("min'yō");
+        });
+
+        // Keep clear folk records in Folk, even when foreign-tagged,
+        // unless they truly have jazz context.
+        if (hasClearlyFolkStyle && !hasJazzContext) {
+            return 'folk';
+        }
+
+        if (hasJazzContext || (itemTag === 'F' && !hasClearlyFolkStyle)) {
+            return 'world_jazz';
+        }
+
         return 'folk';
     }
 
