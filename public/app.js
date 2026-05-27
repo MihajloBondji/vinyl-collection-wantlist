@@ -677,7 +677,7 @@ function getCollectionGenreGroup(item) {
             || normalizedGenres.includes('funk / soul')
             || normalizedGenres.includes('blues');
 
-        if (hasJazzContext || itemTag === 'F' || itemTag === 'U' || itemTag === '') {
+        if (hasJazzContext || itemTag === 'F') {
             return 'world_jazz';
         }
 
