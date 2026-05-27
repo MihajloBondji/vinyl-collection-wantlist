@@ -443,6 +443,17 @@ header h1 {
     color: var(--text-primary);
 }
 
+.collection-subgroup-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 1rem 0 0.75rem 0;
+    color: var(--text-secondary);
+}
+
+.collection-subgroup-grid {
+    margin-bottom: 1.5rem;
+}
+
 .wantlist-item {
     background-color: var(--light-bg);
     border: 1px solid var(--border-color);

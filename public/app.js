@@ -91,6 +91,67 @@ const VINYL_SHOPS = [
      { text: 'Yugovinyl', url: 'https://www.google.com/maps/place/Yugovinyl/@44.8179221,20.4632067,17z/data=!3m1!4b1!4m6!3m5!1s0x475a7a9b40ab658b:0xefe9ee21b36dd60a!8m2!3d44.8179221!4d20.4657816!16s%2Fg%2F11_qycdyq?entry=ttu&g_ep=EgoyMDI2MDEyMS4wIKXMDSoASAFQAw%3D%3D', tag: 'domestic' },
 ].sort((a, b) => a.text.localeCompare(b.text)).sort((a, b) => b.tag.localeCompare(a.tag));
 
+// Collection genre subgrouping (configurable)
+const COLLECTION_GENRE_GROUPS = [
+    {
+        key: 'folk_world',
+        labelKey: 'genre_group_folk_world',
+        label: 'Folk / World',
+        genres: ['Folk, World, & Country']
+    },
+    {
+        key: 'pop_rock',
+        labelKey: 'genre_group_pop_rock',
+        label: 'Pop / Rock',
+        genres: ['Pop', 'Rock', 'Electronic', 'Hip Hop', 'Funk / Soul', 'Reggae', 'Latin']
+    },
+    {
+        key: 'jazz_blues',
+        labelKey: 'genre_group_jazz_blues',
+        label: 'Jazz / Blues',
+        genres: ['Jazz', 'Blues']
+    },
+    {
+        key: 'classical_stage',
+        labelKey: 'genre_group_classical_stage',
+        label: 'Classical / Stage & Screen',
+        genres: ['Classical', 'Stage & Screen']
+    },
+    {
+        key: 'specialty',
+        labelKey: 'genre_group_specialty',
+        label: 'Specialty',
+        genres: ["Children's", 'Non-Music']
+    }
+];
+
+const COLLECTION_GENRE_FALLBACK = {
+    key: 'other',
+    labelKey: 'genre_group_other',
+    label: 'Other'
+};
+
+const COLLECTION_GENRE_LOOKUP = COLLECTION_GENRE_GROUPS.reduce((acc, group) => {
+    group.genres.forEach(genre => {
+        acc[genre.toLowerCase()] = group.key;
+    });
+    return acc;
+}, {});
+
+const COLLECTION_GENRE_META = [...COLLECTION_GENRE_GROUPS, COLLECTION_GENRE_FALLBACK].reduce((acc, group) => {
+    acc[group.key] = {
+        label: group.label,
+        labelKey: group.labelKey
+    };
+    return acc;
+}, {});
+
+function getCollectionGenreLabel(groupKey) {
+    const groupMeta = COLLECTION_GENRE_META[groupKey] || COLLECTION_GENRE_META[COLLECTION_GENRE_FALLBACK.key];
+    const translatedLabel = t(groupMeta.labelKey);
+    return translatedLabel === groupMeta.labelKey ? groupMeta.label : translatedLabel;
+}
+
 // Cache keys - made per-username to prevent mixing lists
 function getCacheKeys(username) {
     return {
@@ -571,6 +632,24 @@ function parseNotesTag(rawNotes) {
     return { notes, tag };
 }
 
+function getCollectionGenreGroup(item) {
+    if (!Array.isArray(item.genres) || item.genres.length === 0) {
+        return COLLECTION_GENRE_FALLBACK.key;
+    }
+
+    for (const group of COLLECTION_GENRE_GROUPS) {
+        const hasGenreFromGroup = item.genres.some(genre => {
+            return COLLECTION_GENRE_LOOKUP[String(genre).toLowerCase()] === group.key;
+        });
+
+        if (hasGenreFromGroup) {
+            return group.key;
+        }
+    }
+
+    return COLLECTION_GENRE_FALLBACK.key;
+}
+
 async function fetchItems(apiUrl) {
     try {
         let page = 1;
@@ -606,6 +685,7 @@ async function fetchItems(apiUrl) {
                             resourceUrl: item.resource_url,
                             dateAdded: item.date_added || new Date().toISOString(),
                             format: basicInfo.formats?.[0]?.name || 'Unknown',
+                            genres: basicInfo.genres || [],
                             notes: parsedNotes.notes,
                             tag: parsedNotes.tag
                         });
@@ -650,6 +730,7 @@ async function fetchItems(apiUrl) {
                             resourceUrl: item.resource_url,
                             dateAdded: item.date_added || new Date().toISOString(),
                             format: basicInfo.formats?.[0]?.name || 'Unknown',
+                            genres: basicInfo.genres || [],
                             notes: parsedNotes.notes,
                             tag: parsedNotes.tag
                         });
@@ -795,17 +876,47 @@ function renderCollectionSection(section, items) {
     section.grid.classList.remove('hidden');
     section.title.classList.remove('hidden');
 
+    const groupedItems = items.reduce((acc, item) => {
+        const groupKey = getCollectionGenreGroup(item);
+        if (!acc[groupKey]) {
+            acc[groupKey] = [];
+        }
+        acc[groupKey].push(item);
+        return acc;
+    }, {});
 
-    items.forEach((item, index) => {
-        const itemElement = createItemElement(item);
-        const indexElement = index % divider;
-        itemElement.style.setProperty('--i', indexElement);
-        itemElement.onclick = () => {
-            itemElement.classList.add('item-selected');
-            overlay.classList.remove('hidden');
-            itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        };
-        section.grid.appendChild(itemElement);
+    const renderOrder = [
+        ...COLLECTION_GENRE_GROUPS.map(group => group.key),
+        COLLECTION_GENRE_FALLBACK.key
+    ];
+
+    renderOrder.forEach(groupKey => {
+        const groupItems = groupedItems[groupKey] || [];
+        if (groupItems.length === 0) {
+            return;
+        }
+
+        const subgroupTitle = document.createElement('h3');
+        subgroupTitle.className = 'collection-subgroup-title';
+        subgroupTitle.textContent = `${getCollectionGenreLabel(groupKey)} (${groupItems.length})`;
+        section.grid.appendChild(subgroupTitle);
+
+        const subgroupGrid = document.createElement('div');
+        subgroupGrid.className = 'list-grid collection-subgroup-grid';
+
+        groupItems.forEach((item, index) => {
+            const itemElement = createItemElement(item);
+            const indexElement = index % divider;
+            itemElement.style.setProperty('--i', indexElement);
+            itemElement.onclick = () => {
+                itemElement.classList.add('item-selected');
+                overlay.classList.remove('hidden');
+                itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            };
+            subgroupGrid.appendChild(itemElement);
+        });
+
+        section.grid.appendChild(subgroupGrid);
     });
 }
 
