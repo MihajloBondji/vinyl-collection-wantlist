@@ -94,17 +94,17 @@ const VINYL_SHOPS = [
 // Collection genre subgrouping (configurable)
 const COLLECTION_GENRE_GROUPS = [
     {
+        key: 'classical_stage',
+        labelKey: 'genre_group_classical_stage',
+        label: 'Classical / Traditional',
+        genres: ['Classical'],
+        exclusive: true
+    },
+    {
         key: 'specialty',
         labelKey: 'genre_group_specialty',
         label: 'Specialty',
         genres: ["Children's", 'Non-Music'],
-        exclusive: true
-    },
-    {
-        key: 'classical_stage',
-        labelKey: 'genre_group_classical_stage',
-        label: 'Classical / Stage & Screen',
-        genres: ['Classical', 'Stage & Screen'],
         exclusive: true
     },
     {
