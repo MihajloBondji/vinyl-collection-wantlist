@@ -441,6 +441,34 @@ header h1 {
     font-weight: 700;
     margin: 2rem 0 1rem 0;
     color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.collection-section-title::after,
+.collection-subgroup-title::after {
+    content: '';
+    width: 0.9rem;
+    height: 0.9rem;
+    margin-left: 0.25rem;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23b3b3b3' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+    transform: rotate(0deg);
+    transition: transform 0.2s ease;
+}
+
+.collection-section-title.collapsed::after,
+.collection-subgroup-title.collapsed::after {
+    transform: rotate(-90deg);
+}
+
+.collection-section-title.collapsed + .collection-section-body {
+    display: none;
 }
 
 .collection-section-body {
@@ -453,6 +481,15 @@ header h1 {
     font-weight: 600;
     margin: 1rem 0 0.75rem 0;
     color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    cursor: pointer;
+    user-select: none;
+}
+
+.collection-subgroup-title.collapsed + .collection-grid {
+    display: none;
 }
 
 .collection-section-body .collection-grid {

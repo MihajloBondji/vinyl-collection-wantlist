@@ -916,6 +916,9 @@ function createCollectionSection(titleText) {
     title.className = 'collection-section-title';
     title.textContent = titleText;
     title.dataset.baseLabel = titleText;
+    title.addEventListener('click', () => {
+        title.classList.toggle('collapsed');
+    });
 
     const grid = document.createElement('div');
     grid.className = 'collection-section-body';
@@ -960,10 +963,10 @@ function renderCollectionSection(section, items) {
     const renderOrder = [
         'pop_rock',
         'world_jazz',
+        'specialty',
         'jazz_blues',
         'folk',
         'classical_stage',
-        'specialty',
         COLLECTION_GENRE_FALLBACK.key
     ];
 
@@ -979,6 +982,9 @@ function renderCollectionSection(section, items) {
 
         const subgroupGrid = document.createElement('div');
         subgroupGrid.className = 'list-grid collection-grid';
+        subgroupTitle.addEventListener('click', () => {
+            subgroupTitle.classList.toggle('collapsed');
+        });
 
         groupItems.forEach((item, index) => {
             const itemElement = createItemElement(item);
