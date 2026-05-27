@@ -94,6 +94,20 @@ const VINYL_SHOPS = [
 // Collection genre subgrouping (configurable)
 const COLLECTION_GENRE_GROUPS = [
     {
+        key: 'specialty',
+        labelKey: 'genre_group_specialty',
+        label: 'Specialty',
+        genres: ["Children's", 'Non-Music'],
+        exclusive: true
+    },
+    {
+        key: 'classical_stage',
+        labelKey: 'genre_group_classical_stage',
+        label: 'Classical / Stage & Screen',
+        genres: ['Classical', 'Stage & Screen'],
+        exclusive: true
+    },
+    {
         key: 'folk',
         labelKey: 'genre_group_folk',
         label: 'Folk',
@@ -111,20 +125,6 @@ const COLLECTION_GENRE_GROUPS = [
         labelKey: 'genre_group_jazz_blues',
         label: 'Jazz / Blues',
         genres: ['Jazz', 'Blues']
-    },
-    {
-        key: 'classical_stage',
-        labelKey: 'genre_group_classical_stage',
-        label: 'Classical / Stage & Screen',
-        genres: ['Classical', 'Stage & Screen'],
-        exclusive: true
-    },
-    {
-        key: 'specialty',
-        labelKey: 'genre_group_specialty',
-        label: 'Specialty',
-        genres: ["Children's", 'Non-Music'],
-        exclusive: true
     }
 ];
 
@@ -860,6 +860,7 @@ function createCollectionSection(titleText) {
     const title = document.createElement('h2');
     title.className = 'collection-section-title';
     title.textContent = titleText;
+    title.dataset.baseLabel = titleText;
 
     const grid = document.createElement('div');
     grid.className = 'collection-section-body';
@@ -890,6 +891,7 @@ function renderCollectionSection(section, items) {
 
     section.grid.classList.remove('hidden');
     section.title.classList.remove('hidden');
+    section.title.textContent = `${section.title.dataset.baseLabel} (${items.length})`;
 
     const groupedItems = items.reduce((acc, item) => {
         const groupKey = getCollectionGenreGroup(item);
