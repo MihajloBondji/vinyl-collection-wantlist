@@ -115,6 +115,12 @@ const COLLECTION_GENRE_GROUPS = [
         exclusive: true
     },
     {
+        key: 'world_jazz',
+        labelKey: 'genre_group_world_jazz',
+        label: 'World / Jazz',
+        genres: []
+    },
+    {
         key: 'pop_rock',
         labelKey: 'genre_group_pop_rock',
         label: 'Pop / Rock',
@@ -133,6 +139,8 @@ const COLLECTION_GENRE_FALLBACK = {
     labelKey: 'genre_group_other',
     label: 'Other'
 };
+
+const SPECIALTY_STYLE_KEYWORDS = ['video game music', 'soundtrack', 'score'];
 
 const COLLECTION_GENRE_LOOKUP = COLLECTION_GENRE_GROUPS.reduce((acc, group) => {
     group.genres.forEach(genre => {
@@ -640,11 +648,47 @@ function getCollectionGenreGroup(item) {
         return COLLECTION_GENRE_FALLBACK.key;
     }
 
+    const normalizedGenres = item.genres.map(genre => String(genre).toLowerCase());
+    const normalizedStyles = Array.isArray(item.styles)
+        ? item.styles.map(style => String(style).toLowerCase())
+        : [];
+    const itemTag = String(item.tag || '').toUpperCase();
+
+    // Classical should win when present
+    if (normalizedGenres.includes('classical')) {
+        return 'classical_stage';
+    }
+
+    // Keep children's / non-music and soundtrack-like releases in Specialty
+    if (normalizedGenres.includes("children's") || normalizedGenres.includes('non-music')) {
+        return 'specialty';
+    }
+
+    const hasSpecialtyStyle = normalizedStyles.some(style => {
+        return SPECIALTY_STYLE_KEYWORDS.some(keyword => style.includes(keyword));
+    });
+    if (hasSpecialtyStyle) {
+        return 'specialty';
+    }
+
+    // Split Folk, World, & Country between Folk and World/Jazz using context
+    if (normalizedGenres.includes('folk, world, & country')) {
+        const hasJazzContext = normalizedGenres.includes('jazz')
+            || normalizedGenres.includes('funk / soul')
+            || normalizedGenres.includes('blues');
+
+        if (hasJazzContext || itemTag === 'F' || itemTag === 'U' || itemTag === '') {
+            return 'world_jazz';
+        }
+
+        return 'folk';
+    }
+
     // Check exclusive groups first — they always win regardless of other genres
     for (const group of COLLECTION_GENRE_GROUPS) {
         if (!group.exclusive) continue;
-        const hasExclusiveGenre = item.genres.some(genre => {
-            return COLLECTION_GENRE_LOOKUP[String(genre).toLowerCase()] === group.key;
+        const hasExclusiveGenre = normalizedGenres.some(genre => {
+            return COLLECTION_GENRE_LOOKUP[genre] === group.key;
         });
         if (hasExclusiveGenre) {
             return group.key;
@@ -654,8 +698,8 @@ function getCollectionGenreGroup(item) {
     // Then check non-exclusive groups in defined order
     for (const group of COLLECTION_GENRE_GROUPS) {
         if (group.exclusive) continue;
-        const hasGenreFromGroup = item.genres.some(genre => {
-            return COLLECTION_GENRE_LOOKUP[String(genre).toLowerCase()] === group.key;
+        const hasGenreFromGroup = normalizedGenres.some(genre => {
+            return COLLECTION_GENRE_LOOKUP[genre] === group.key;
         });
         if (hasGenreFromGroup) {
             return group.key;
@@ -701,6 +745,7 @@ async function fetchItems(apiUrl) {
                             dateAdded: item.date_added || new Date().toISOString(),
                             format: basicInfo.formats?.[0]?.name || 'Unknown',
                             genres: basicInfo.genres || [],
+                            styles: basicInfo.styles || [],
                             notes: parsedNotes.notes,
                             tag: parsedNotes.tag
                         });
@@ -746,6 +791,7 @@ async function fetchItems(apiUrl) {
                             dateAdded: item.date_added || new Date().toISOString(),
                             format: basicInfo.formats?.[0]?.name || 'Unknown',
                             genres: basicInfo.genres || [],
+                            styles: basicInfo.styles || [],
                             notes: parsedNotes.notes,
                             tag: parsedNotes.tag
                         });
@@ -904,6 +950,7 @@ function renderCollectionSection(section, items) {
 
     const renderOrder = [
         'pop_rock',
+        'world_jazz',
         'jazz_blues',
         'folk',
         'classical_stage',
