@@ -811,7 +811,7 @@ function ensureCollectionSections() {
     }
 
     // Remove old collection sections if they exist
-    document.querySelectorAll('.collection-section-title, .collection-grid').forEach(el => {
+    document.querySelectorAll('.collection-section-title, .collection-section-body').forEach(el => {
         el.remove();
     });
 
@@ -847,7 +847,7 @@ function createCollectionSection(titleText) {
     title.textContent = titleText;
 
     const grid = document.createElement('div');
-    grid.className = 'list-grid collection-grid';
+    grid.className = 'collection-section-body';
 
     return { title, grid };
 }
@@ -899,10 +899,9 @@ function renderCollectionSection(section, items) {
         const subgroupTitle = document.createElement('h3');
         subgroupTitle.className = 'collection-subgroup-title';
         subgroupTitle.textContent = `${getCollectionGenreLabel(groupKey)} (${groupItems.length})`;
-        section.grid.appendChild(subgroupTitle);
 
         const subgroupGrid = document.createElement('div');
-        subgroupGrid.className = 'list-grid collection-subgroup-grid';
+        subgroupGrid.className = 'list-grid collection-grid';
 
         groupItems.forEach((item, index) => {
             const itemElement = createItemElement(item);
@@ -916,6 +915,7 @@ function renderCollectionSection(section, items) {
             subgroupGrid.appendChild(itemElement);
         });
 
+        section.grid.appendChild(subgroupTitle);
         section.grid.appendChild(subgroupGrid);
     });
 }

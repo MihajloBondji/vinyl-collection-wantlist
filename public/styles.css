@@ -443,6 +443,11 @@ header h1 {
     color: var(--text-primary);
 }
 
+.collection-section-body {
+    display: flex;
+    flex-direction: column;
+}
+
 .collection-subgroup-title {
     font-size: 1.1rem;
     font-weight: 600;
@@ -450,7 +455,7 @@ header h1 {
     color: var(--text-secondary);
 }
 
-.collection-subgroup-grid {
+.collection-section-body .collection-grid {
     margin-bottom: 1.5rem;
 }
 
