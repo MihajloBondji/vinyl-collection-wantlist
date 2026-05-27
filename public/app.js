@@ -121,7 +121,8 @@ const COLLECTION_GENRE_GROUPS = [
         key: 'specialty',
         labelKey: 'genre_group_specialty',
         label: 'Specialty',
-        genres: ["Children's", 'Non-Music']
+        genres: ["Children's", 'Non-Music'],
+        exclusive: true
     }
 ];
 
@@ -637,11 +638,23 @@ function getCollectionGenreGroup(item) {
         return COLLECTION_GENRE_FALLBACK.key;
     }
 
+    // Check exclusive groups first — they always win regardless of other genres
     for (const group of COLLECTION_GENRE_GROUPS) {
+        if (!group.exclusive) continue;
+        const hasExclusiveGenre = item.genres.some(genre => {
+            return COLLECTION_GENRE_LOOKUP[String(genre).toLowerCase()] === group.key;
+        });
+        if (hasExclusiveGenre) {
+            return group.key;
+        }
+    }
+
+    // Then check non-exclusive groups in defined order
+    for (const group of COLLECTION_GENRE_GROUPS) {
+        if (group.exclusive) continue;
         const hasGenreFromGroup = item.genres.some(genre => {
             return COLLECTION_GENRE_LOOKUP[String(genre).toLowerCase()] === group.key;
         });
-
         if (hasGenreFromGroup) {
             return group.key;
         }
@@ -886,7 +899,11 @@ function renderCollectionSection(section, items) {
     }, {});
 
     const renderOrder = [
-        ...COLLECTION_GENRE_GROUPS.map(group => group.key),
+        'pop_rock',
+        'jazz_blues',
+        'folk_world',
+        'specialty',
+        'classical_stage',
         COLLECTION_GENRE_FALLBACK.key
     ];
 
